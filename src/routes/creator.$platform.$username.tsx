@@ -37,6 +37,8 @@ export const Route = createFileRoute("/creator/$platform/$username")({
 function CreatorReportPage() {
   const { platform, username } = Route.useParams();
   const analyze = useServerFn(analyzeCreator);
+  const record = useServerFn(recordUserSearch);
+  const { user } = useAuth();
 
   const mutation = useMutation<AnalyzeResult, Error, { refresh: boolean }>({
     mutationFn: ({ refresh }) =>
@@ -47,6 +49,12 @@ function CreatorReportPage() {
   useEffect(() => {
     mutate({ refresh: false });
   }, [mutate, platform, username]);
+
+  const succeeded = mutation.isSuccess;
+  useEffect(() => {
+    if (!succeeded || !user) return;
+    void record({ data: { platform: platform as Platform, username } }).catch(() => {});
+  }, [succeeded, user, record, platform, username]);
 
   return (
     <main className="min-h-screen">
