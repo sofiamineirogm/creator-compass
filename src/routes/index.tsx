@@ -73,7 +73,7 @@ function Index() {
         </div>
       </section>
 
-      <div className="mx-auto -mt-12 w-full max-w-3xl px-5 sm:px-8">
+      <div className="relative z-10 mx-auto -mt-16 w-full max-w-3xl px-5 sm:px-8">
         <CreatorSearch />
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Try <span className="font-medium text-foreground">@mrbeast</span> ·{" "}

@@ -141,6 +141,7 @@ function Report({
             src={creator.avatarUrl}
             alt={`${creator.fullName ?? creator.username} profile photo`}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="h-24 w-24 rounded-full object-cover ring-2 ring-border"
           />
         ) : (
