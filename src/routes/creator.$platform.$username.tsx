@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 
 import { analyzeCreator } from "@/lib/creators.functions";
+import { getSavedState, recordUserSearch, toggleSavedCreator } from "@/lib/account.functions";
 import { formatCompact, type AnalyzeResult, type Platform } from "@/lib/creator-types";
+import { useAuth } from "@/hooks/use-auth";
 import { ScoreBar, ScoreDial } from "@/components/score-dial";
 import { Skeleton } from "@/components/ui/skeleton";
 
