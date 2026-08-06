@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CreatorPlatformUsernameRouteImport } from './routes/creator.$platform.$username'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreatorPlatformUsernameRoute = CreatorPlatformUsernameRouteImport.update({
+  id: '/creator/$platform/$username',
+  path: '/creator/$platform/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/creator/$platform/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/creator/$platform/$username'
+  id: '__root__' | '/' | '/creator/$platform/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreatorPlatformUsernameRoute: typeof CreatorPlatformUsernameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +58,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creator/$platform/$username': {
+      id: '/creator/$platform/$username'
+      path: '/creator/$platform/$username'
+      fullPath: '/creator/$platform/$username'
+      preLoaderRoute: typeof CreatorPlatformUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreatorPlatformUsernameRoute: CreatorPlatformUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
