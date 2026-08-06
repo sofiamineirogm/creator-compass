@@ -27,11 +27,7 @@ export function CreatorSearch({ autoFocus = false }: { autoFocus?: boolean }) {
     setError(null);
     setSubmitting(true);
     const platform: Platform = selection === "tiktok" ? "tiktok" : "instagram";
-    void navigate({
-      to: "/creator/$platform/$username",
-      params: { platform, username },
-      search: selection === "both" ? { compare: "1" } : {},
-    });
+    void navigate({ to: "/creator/$platform/$username", params: { platform, username } });
   }
 
   return (
