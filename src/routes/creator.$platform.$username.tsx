@@ -194,6 +194,7 @@ function Report({
 
         <div className="flex flex-col items-center gap-3">
           <ScoreDial value={report.scores.overall} label="Overall" />
+          <SaveButton platform={creator.platform} username={creator.username} />
           <button
             onClick={onRefresh}
             disabled={refreshing}
