@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import {
@@ -288,5 +288,55 @@ function Report({
         {new Date(result.fetchedAt).toLocaleString()}
       </p>
     </div>
+  );
+}
+
+function SaveButton({ platform, username }: { platform: Platform; username: string }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const fetchState = useServerFn(getSavedState);
+  const toggle = useServerFn(toggleSavedCreator);
+
+  const state = useQuery({
+    queryKey: ["saved-state", platform, username],
+    queryFn: () => fetchState({ data: { platform, username } }),
+    enabled: Boolean(user),
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => toggle({ data: { platform, username } }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["saved-state", platform, username] });
+      void queryClient.invalidateQueries({ queryKey: ["saved-creators"] });
+    },
+  });
+
+  if (!user) {
+    return (
+      <Link
+        to="/auth"
+        className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <Bookmark className="h-3.5 w-3.5" aria-hidden /> Sign in to save
+      </Link>
+    );
+  }
+
+  const saved = state.data?.saved ?? false;
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending || state.isPending}
+      aria-pressed={saved}
+      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+        saved
+          ? "bg-ember text-primary-foreground shadow-glow"
+          : "border border-border text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-current" : ""}`} aria-hidden />
+      {saved ? "Saved" : "Save creator"}
+    </button>
   );
 }
