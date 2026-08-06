@@ -97,7 +97,7 @@ export async function saveCreator(profile: CreatorProfile): Promise<string> {
         engagement_rate: profile.engagementRate,
         category: profile.category,
         country: profile.country,
-        external_links: profile.externalLinks,
+        external_links: profile.externalLinks as unknown as Row,
         last_fetched_at: profile.lastFetchedAt,
       },
       { onConflict: "platform,username" },
@@ -136,8 +136,8 @@ export async function saveReport(creatorId: string, report: CreatorReport): Prom
     engagement_score: report.scores.engagement,
     accessibility_score: report.scores.accessibility,
     growth_score: report.scores.growth,
-    summaries: report.sections,
-    premium: report.premium,
+    summaries: report.sections as unknown as Row,
+    premium: report.premium as unknown as Row,
   });
 }
 
