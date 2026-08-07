@@ -217,6 +217,40 @@ async function ensureDemoProfiles(service: Db, accounts: DemoAccountStatus[]) {
       } as never);
     }
   }
+
+  // The Pro Creator demo persona ships with a connected (public-handle)
+  // Instagram social account so the creator dashboard is populated on login.
+  const pro = creators.find((c) => c.key === "pro_creator");
+  if (pro) {
+    const { data: proProfile } = await service
+      .from("creator_profiles")
+      .select("id")
+      .eq("user_id", pro.userId)
+      .maybeSingle();
+    const profileId = (proProfile as Row | null)?.["id"];
+    if (profileId) {
+      const { data: existingAccount } = await service
+        .from("social_accounts")
+        .select("id")
+        .eq("creator_profile_id", profileId)
+        .eq("platform", "instagram")
+        .maybeSingle();
+      if (!existingAccount) {
+        await service.from("social_accounts").insert({
+          creator_profile_id: profileId,
+          platform: "instagram",
+          handle: DEMO_INSTAGRAM_HANDLE,
+          profile_url: `https://www.instagram.com/${DEMO_INSTAGRAM_HANDLE}`,
+          connection_type: "public_handle",
+          connected_at: new Date().toISOString(),
+        } as never);
+      }
+      await service
+        .from("creator_profiles")
+        .update({ instagram_username: DEMO_INSTAGRAM_HANDLE })
+        .eq("id", profileId);
+    }
+  }
 }
 
 /* ------------------------------- sign in ------------------------------ */

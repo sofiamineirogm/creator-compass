@@ -17,7 +17,7 @@ const CREATOR_NAV: NavItem[] = [
   { to: "/marketplace/applications", label: "Applied", icon: FileText },
   { to: "/marketplace/saved", label: "Saved", icon: Bookmark },
   { to: "/marketplace/messages", label: "Inbox", icon: MessageSquare },
-  { to: "/marketplace/profile", label: "Profile", icon: UserRound },
+  { to: "/my-creator", label: "My Creator", icon: UserRound },
 ];
 
 const BRAND_NAV: NavItem[] = [
