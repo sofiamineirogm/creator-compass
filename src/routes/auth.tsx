@@ -138,6 +138,21 @@ function AuthPage() {
           </button>
         </form>
 
+        {isDemoMode() ? (
+          <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4">
+            <p className="text-sm font-semibold">Just testing?</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use the demo console to sign in as a creator, brand or agency in one click.
+            </p>
+            <Link
+              to="/demo"
+              className="mt-3 inline-flex h-9 items-center rounded-full bg-dusk px-4 text-xs font-semibold text-primary-foreground"
+            >
+              Open demo console
+            </Link>
+          </div>
+        ) : null}
+
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {mode === "signin" ? "No account yet?" : "Already have an account?"}{" "}
           <button
@@ -152,6 +167,7 @@ function AuthPage() {
             {mode === "signin" ? "Create one" : "Sign in"}
           </button>
         </p>
+
       </div>
     </main>
   );
