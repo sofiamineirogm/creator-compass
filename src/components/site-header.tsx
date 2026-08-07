@@ -28,6 +28,15 @@ export function SiteHeader() {
           CreatorIQ
         </Link>
 
+        <nav className="hidden items-center gap-1 sm:flex">
+          <Link
+            to="/marketplace"
+            className={`inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-opacity hover:opacity-80 ${tone}`}
+          >
+            Marketplace
+          </Link>
+        </nav>
+
         {loading ? (
           <div className="h-9 w-24" />
         ) : user ? (

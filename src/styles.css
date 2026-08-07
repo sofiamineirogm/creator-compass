@@ -228,7 +228,8 @@
 }
 
 @utility input-base {
-  height: 2.75rem;
+  min-height: 2.75rem;
+  padding-block: 0.625rem;
   width: 100%;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
