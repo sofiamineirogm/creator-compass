@@ -105,6 +105,7 @@ async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMet
       postsCount: Number(c["posts_count"] ?? 0),
       avgLikes: Number(c["avg_likes"] ?? 0),
       avgComments: Number(c["avg_comments"] ?? 0),
+      avgViews: Number(c["avg_views"] ?? 0),
       engagementRate: Number(c["engagement_rate"] ?? 0),
       overallScore: r ? Number(r["overall_score"]) : null,
       brandScore: r ? Number(r["brand_score"]) : null,
@@ -116,7 +117,19 @@ async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMet
   };
 }
 
-function benchmarkFrom(creatorRow: Row, metrics: CreatorMetrics): CreatorBenchmark {
+function benchmarkFrom(creatorRow: Row, metrics: CreatorMetrics): CreatorBenchmark | null {
+  // NO REAL DATA = NO METRIC. Never benchmark from invented scores.
+  const scores = {
+    overall: metrics.overallScore,
+    brand: metrics.brandScore,
+    engagement: metrics.engagementScore,
+    accessibility: metrics.accessibilityScore,
+    growth: metrics.growthScore,
+  };
+  const hasRealScores = Object.values(scores).every((v) => typeof v === "number" && Number.isFinite(v));
+  const hasRealProfile = metrics.followers > 0 && metrics.engagementRate > 0;
+  if (!hasRealScores || !hasRealProfile) return null;
+
   // Reuse the existing scoring engine rather than inventing a second model.
   const profile = {
     platform: metrics.platform,
@@ -142,11 +155,11 @@ function benchmarkFrom(creatorRow: Row, metrics: CreatorMetrics): CreatorBenchma
   } satisfies CreatorProfile;
 
   const result = benchmarkCreator(profile, {
-    overall: metrics.overallScore ?? 60,
-    brand: metrics.brandScore ?? 60,
-    engagement: metrics.engagementScore ?? 60,
-    accessibility: metrics.accessibilityScore ?? 60,
-    growth: metrics.growthScore ?? 60,
+    overall: scores.overall as number,
+    brand: scores.brand as number,
+    engagement: scores.engagement as number,
+    accessibility: scores.accessibility as number,
+    growth: scores.growth as number,
   });
 
   return {
@@ -172,7 +185,9 @@ async function similarCreators(metrics: CreatorMetrics, creatorRow: Row | null):
   if (category) query = query.eq("category", category);
 
   const { data } = await query;
-  const rows = ((data as Row[]) ?? []).map((r) => ({
+  const rows = ((data as Row[]) ?? [])
+    .filter((r) => Number(r["followers"] ?? 0) > 0 && r["username"] !== metrics.handle)
+    .map((r) => ({
     platform: r["platform"] as Platform,
     username: r["username"],
     fullName: r["full_name"] ?? null,

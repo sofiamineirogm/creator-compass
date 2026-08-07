@@ -21,7 +21,7 @@ export interface DemoAccountSpec {
 }
 
 /** Clearly identifiable demo social handle — never a real creator account. */
-export const DEMO_INSTAGRAM_HANDLE = "creatoriq.demo.maya";
+export const DEMO_INSTAGRAM_HANDLE = "ato.gastro";
 
 /** Passwords live server-side only — they are never bundled into the client. */
 export const DEMO_ACCOUNTS: DemoAccountSpec[] = [
@@ -238,13 +238,22 @@ async function ensureDemoProfiles(service: Db, accounts: DemoAccountStatus[]) {
         .eq("creator_profile_id", profileId)
         .eq("platform", "instagram")
         .maybeSingle();
-      if (!existingAccount) {
+      // One Instagram account per creator profile: update in place, never duplicate.
+      const accountPatch = {
+        handle: DEMO_INSTAGRAM_HANDLE,
+        profile_url: `https://www.instagram.com/${DEMO_INSTAGRAM_HANDLE}`,
+        connection_type: "public_handle",
+      };
+      if (existingAccount) {
+        await service
+          .from("social_accounts")
+          .update(accountPatch as never)
+          .eq("id", (existingAccount as { id: string }).id);
+      } else {
         await service.from("social_accounts").insert({
           creator_profile_id: profileId,
           platform: "instagram",
-          handle: DEMO_INSTAGRAM_HANDLE,
-          profile_url: `https://www.instagram.com/${DEMO_INSTAGRAM_HANDLE}`,
-          connection_type: "public_handle",
+          ...accountPatch,
           connected_at: new Date().toISOString(),
         } as never);
       }
