@@ -475,28 +475,36 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
       <section className="surface p-5">
         <h3 className="font-display text-lg font-semibold">Benchmark</h3>
         {benchmark ? (
-          <div className="mt-3 space-y-2 text-sm">
-            <p className="text-muted-foreground">{benchmark.peerGroup}</p>
-            {benchmark.percentile !== null && benchmark.standing ? (
+          benchmark.percentile !== null && benchmark.standing ? (
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="text-muted-foreground">{benchmark.peerGroup}</p>
               <p className="font-display text-2xl font-semibold">
                 {benchmark.standing} · {benchmark.percentile}th percentile
               </p>
-            ) : (
+              <ul className="grid gap-2 sm:grid-cols-3">
+                <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
+                <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
+                <Row label="Top 10%" value={`${benchmark.top10Engagement}%`} />
+              </ul>
+            </div>
+          ) : (
+            /* Below the peer threshold: no peer statistics at all — they would
+               imply a comparison that does not exist. */
+            <div className="mt-3 space-y-1 text-sm">
               <p className="font-display text-lg font-semibold text-muted-foreground">
                 Not enough comparable creators yet
-                <span className="mt-1 block text-xs font-normal">
-                  {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found — your own
-                  scores are real and shown above.
-                </span>
               </p>
-            )}
-            <ul className="grid gap-2 sm:grid-cols-3">
-              <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
-              <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
-              <Row label="Top 10%" value={`${benchmark.top10Engagement}%`} />
-            </ul>
-          </div>
+              <p className="text-xs text-muted-foreground">
+                {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                We need more comparable creators before calculating your percentile. Your CreatorIQ
+                scores above are real and unaffected.
+              </p>
+            </div>
+          )
         ) : (
+
           <p className="mt-2 text-sm text-muted-foreground">
             Not enough data yet — benchmarks appear once a real analysis with scores exists for a
             connected account.
