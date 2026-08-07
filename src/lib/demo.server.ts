@@ -201,17 +201,20 @@ async function ensureDemoProfiles(service: Db, accounts: DemoAccountStatus[]) {
     if (!data) {
       const pro = c.key === "pro_creator";
       await service.from("creator_profiles").insert({
+        // Pro Creator is the REAL-DATA persona: it is connected to the public
+        // Instagram account @ato.gastro, so its identity must not describe a
+        // different, invented creator. Name/avatar/category/location come from
+        // the live analysis at read time; nothing is seeded that would conflict.
         user_id: c.userId,
-        display_name: pro ? "Maya Okafor" : "Sam Reyes",
-        handle: pro ? "mayaokafor" : "samreyes",
-        headline: pro ? "Beauty & skincare storyteller" : "Weekend runner sharing honest gear reviews",
-        bio: pro
-          ? "Long-form skincare reviews with before/after documentation. 6 years of brand work."
-          : "Just getting started. Running, coffee and cheap gear that actually works.",
-        location: pro ? "Los Angeles, CA" : "Porto, Portugal",
+        display_name: pro ? "ATO Gastro" : "Sam Reyes",
+        handle: pro ? "ato.gastro" : "samreyes",
+        headline: pro ? null : "Weekend runner sharing honest gear reviews",
+        bio: pro ? null : "Just getting started. Running, coffee and cheap gear that actually works.",
+        location: pro ? null : "Porto, Portugal",
         languages: ["English"],
-        categories: pro ? ["Beauty", "Lifestyle"] : ["Fitness"],
-        instagram_username: pro ? "mayaokafor" : "samreyes",
+        categories: pro ? [] : ["Fitness"],
+        instagram_username: pro ? "ato.gastro" : "samreyes",
+
         starting_price: pro ? 1200 : 250,
         max_price: pro ? 4500 : 600,
         availability: "open",
