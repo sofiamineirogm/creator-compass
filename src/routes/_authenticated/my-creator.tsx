@@ -24,6 +24,7 @@ import {
   syncMySocialAccount,
 } from "@/lib/creator-identity.functions";
 import {
+  MINIMUM_BENCHMARK_PEERS,
   ONBOARDING_STEPS,
   PLATFORM_LABELS,
   nextOnboardingStep,
