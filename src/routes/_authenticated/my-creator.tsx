@@ -400,11 +400,6 @@ function ConfirmStep({
   );
 }
 
-/** Never render an invented score: show a dash when the report has no value. */
-function scoreLabel(value: number | null): string {
-  return typeof value === "number" && Number.isFinite(value) ? `${Math.round(value)}/100` : "—";
-}
-
 /* ------------------------------- dashboard ------------------------------- */
 
 function CreatorDashboard({
@@ -415,7 +410,7 @@ function CreatorDashboard({
   onChanged: () => void;
 }) {
   const profile = identity.profile!;
-  const { metrics, benchmark } = identity;
+  const { metrics } = identity;
 
   return (
     <div className="space-y-5">
@@ -613,11 +608,3 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-display text-xl font-semibold">{value}</p>
-    </div>
-  );
-}
