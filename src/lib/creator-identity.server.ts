@@ -6,12 +6,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { publicClient } from "./supabase-public.server";
-import { normalizeUsername, type CreatorProfile, type Platform } from "./creator-types";
+import {
+  normalizeUsername,
+  type CreatorPost,
+  type CreatorProfile,
+  type DataQuality,
+  type Platform,
+} from "./creator-types";
+import { median, type PeerStats, type ProfileSignals } from "./analytics/kpi";
 import { benchmarkCreator } from "./scoring/engine";
 import {
   MINIMUM_BENCHMARK_PEERS,
   MINIMUM_SIMILAR_CREATORS,
   profileUrlFor,
+  type CreatorAnalyticsData,
   type CreatorBenchmark,
   type CreatorIdentity,
   type CreatorIdentityProfile,
@@ -19,6 +27,7 @@ import {
   type SimilarCreator,
   type SocialAccount,
 } from "./creator-identity";
+
 
 type Row = Record<string, any>;
 type Db = SupabaseClient<any, any, any>;
