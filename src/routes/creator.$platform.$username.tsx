@@ -198,7 +198,13 @@ function Report({
         </div>
 
         <div className="flex flex-col items-center gap-3">
-          <ScoreDial value={report.scores.overall} label="Overall" />
+          {report ? (
+            <ScoreDial value={report.scores.overall} label="Overall" />
+          ) : (
+            <div className="flex h-40 w-40 flex-col items-center justify-center rounded-full border border-dashed border-border px-6 text-center text-xs text-muted-foreground">
+              Not enough data yet
+            </div>
+          )}
           <SaveButton platform={creator.platform} username={creator.username} />
           <button
             onClick={onRefresh}
