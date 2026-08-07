@@ -9,6 +9,8 @@ import { publicClient } from "./supabase-public.server";
 import { normalizeUsername, type CreatorProfile, type Platform } from "./creator-types";
 import { benchmarkCreator } from "./scoring/engine";
 import {
+  MINIMUM_BENCHMARK_PEERS,
+  MINIMUM_SIMILAR_CREATORS,
   profileUrlFor,
   type CreatorBenchmark,
   type CreatorIdentity,
