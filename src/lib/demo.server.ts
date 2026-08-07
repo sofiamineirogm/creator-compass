@@ -20,6 +20,9 @@ export interface DemoAccountSpec {
   plan: Plan;
 }
 
+/** Clearly identifiable demo social handle — never a real creator account. */
+export const DEMO_INSTAGRAM_HANDLE = "creatoriq.demo.maya";
+
 /** Passwords live server-side only — they are never bundled into the client. */
 export const DEMO_ACCOUNTS: DemoAccountSpec[] = [
   {
