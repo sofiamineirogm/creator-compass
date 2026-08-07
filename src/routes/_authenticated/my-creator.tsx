@@ -11,7 +11,7 @@ import {
   Loader2,
   Music2,
   RefreshCw,
-  Sparkles,
+
   Trash2,
   Users,
 } from "lucide-react";
@@ -444,7 +444,7 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
             </div>
             {metrics.overallScore !== null ? (
               <div className="mt-5 flex flex-wrap items-center gap-6">
-                <ScoreDial score={metrics.overallScore} label="Overall" />
+                <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
                 <ul className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
                   <Row label="Brand" value={`${Math.round(metrics.brandScore ?? 0)}/100`} />
                   <Row label="Engagement" value={`${Math.round(metrics.engagementScore ?? 0)}/100`} />
@@ -615,4 +615,3 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export const _icons = Sparkles;

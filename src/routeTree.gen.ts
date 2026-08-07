@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedMyCreatorRouteImport } from './routes/_authenticated/my-creator'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as AuthenticatedMarketplaceApplicationsRouteImport } from './routes/_authenticated/marketplace.applications'
 import { Route as AuthenticatedMarketplaceManageRouteImport } from './routes/_authenticated/marketplace.manage'
@@ -46,6 +47,11 @@ const DemoRoute = DemoRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyCreatorRoute = AuthenticatedMyCreatorRouteImport.update({
+  id: '/my-creator',
+  path: '/my-creator',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-creator': typeof AuthenticatedMyCreatorRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/my-creator': typeof AuthenticatedMyCreatorRoute
   '/marketplace': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/my-creator': typeof AuthenticatedMyCreatorRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/_authenticated/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/_authenticated/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/dashboard'
+    | '/my-creator'
     | '/marketplace/'
     | '/marketplace/applications'
     | '/marketplace/manage'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/dashboard'
+    | '/my-creator'
     | '/marketplace'
     | '/marketplace/applications'
     | '/marketplace/manage'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/demo'
     | '/_authenticated/dashboard'
+    | '/_authenticated/my-creator'
     | '/marketplace/'
     | '/_authenticated/marketplace/applications'
     | '/_authenticated/marketplace/manage'
@@ -242,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-creator': {
+      id: '/_authenticated/my-creator'
+      path: '/my-creator'
+      fullPath: '/my-creator'
+      preLoaderRoute: typeof AuthenticatedMyCreatorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/marketplace/': {
@@ -327,6 +346,7 @@ const AuthenticatedMarketplaceManageRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMyCreatorRoute: typeof AuthenticatedMyCreatorRoute
   AuthenticatedMarketplaceApplicationsRoute: typeof AuthenticatedMarketplaceApplicationsRoute
   AuthenticatedMarketplaceManageRoute: typeof AuthenticatedMarketplaceManageRouteWithChildren
   AuthenticatedMarketplaceMessagesRoute: typeof AuthenticatedMarketplaceMessagesRoute
@@ -336,6 +356,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMyCreatorRoute: AuthenticatedMyCreatorRoute,
   AuthenticatedMarketplaceApplicationsRoute:
     AuthenticatedMarketplaceApplicationsRoute,
   AuthenticatedMarketplaceManageRoute:
@@ -360,13 +381,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
