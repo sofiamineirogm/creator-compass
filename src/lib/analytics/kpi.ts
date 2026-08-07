@@ -23,7 +23,12 @@ export interface SampleQuality {
 
 export function sampleQuality(postCount: number): SampleQuality {
   if (postCount <= 0)
-    return { tier: "none", posts: 0, label: "No post-level performance data available yet.", analytical: false };
+    return {
+      tier: "none",
+      posts: 0,
+      label: "No post-level performance data available yet.",
+      analytical: false,
+    };
   if (postCount < 5)
     return {
       tier: "minimal",
@@ -38,7 +43,12 @@ export function sampleQuality(postCount: number): SampleQuality {
       label: "Early signal — more posts will improve confidence.",
       analytical: true,
     };
-  return { tier: "normal", posts: postCount, label: `${postCount} posts analysed.`, analytical: true };
+  return {
+    tier: "normal",
+    posts: postCount,
+    label: `${postCount} posts analysed.`,
+    analytical: true,
+  };
 }
 
 /* -------------------------------- helpers -------------------------------- */
@@ -47,7 +57,7 @@ export function median(values: number[]): number | null {
   const v = values.filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
   if (v.length === 0) return null;
   const mid = Math.floor(v.length / 2);
-  return v.length % 2 ? (v[mid] as number) : (((v[mid - 1] as number) + (v[mid] as number)) / 2);
+  return v.length % 2 ? (v[mid] as number) : ((v[mid - 1] as number) + (v[mid] as number)) / 2;
 }
 
 function mean(values: number[]): number | null {
@@ -56,7 +66,13 @@ function mean(values: number[]): number | null {
 }
 
 function ratio(numerator: number | null, denominator: number | null): number | null {
-  if (numerator === null || denominator === null || !Number.isFinite(denominator) || denominator <= 0) return null;
+  if (
+    numerator === null ||
+    denominator === null ||
+    !Number.isFinite(denominator) ||
+    denominator <= 0
+  )
+    return null;
   return numerator / denominator;
 }
 
@@ -145,7 +161,8 @@ export function computeCadence(posts: CreatorPost[]): Cadence | null {
   if (spanDays <= 0) return null;
 
   const gaps: number[] = [];
-  for (let i = 1; i < dates.length; i += 1) gaps.push(((dates[i] as number) - (dates[i - 1] as number)) / 86_400_000);
+  for (let i = 1; i < dates.length; i += 1)
+    gaps.push(((dates[i] as number) - (dates[i - 1] as number)) / 86_400_000);
 
   return {
     postsPerWeek: ((dates.length - 1) / spanDays) * 7,
@@ -198,7 +215,11 @@ export interface ContentPattern {
 const PATTERN_TESTS: { key: string; label: string; test: (caption: string) => boolean }[] = [
   { key: "question", label: "Captions that ask a question", test: (c) => c.includes("?") },
   { key: "long", label: "Longer captions (140+ characters)", test: (c) => c.length >= 140 },
-  { key: "hashtags", label: "Captions using 3+ hashtags", test: (c) => (c.match(/#/g) ?? []).length >= 3 },
+  {
+    key: "hashtags",
+    label: "Captions using 3+ hashtags",
+    test: (c) => (c.match(/#/g) ?? []).length >= 3,
+  },
   { key: "mentions", label: "Captions tagging another account", test: (c) => c.includes("@") },
 ];
 
@@ -293,7 +314,11 @@ function withPeer(kpi: Kpi, peers: PeerStats | null): Kpi {
   };
 }
 
-export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cadence: Cadence | null): Kpi[] {
+export function computeKpis(
+  input: AnalyticsInput,
+  content: ContentAnalysis,
+  cadence: Cadence | null,
+): Kpi[] {
   const { followers, avgLikes, avgComments, avgViews, engagementRate, peers } = input;
   const enough = content.sample.analytical;
 
@@ -310,7 +335,8 @@ export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cad
     {
       key: "likesPerFollower",
       label: "Likes per follower",
-      value: ratio(avgLikes, followers) === null ? null : (ratio(avgLikes, followers) as number) * 100,
+      value:
+        ratio(avgLikes, followers) === null ? null : (ratio(avgLikes, followers) as number) * 100,
       format: "percent",
       explanation: "How much of your audience likes a typical post.",
       sufficient: avgLikes !== null && followers > 0,
@@ -318,7 +344,10 @@ export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cad
     {
       key: "commentsPerFollower",
       label: "Comments per follower",
-      value: ratio(avgComments, followers) === null ? null : (ratio(avgComments, followers) as number) * 100,
+      value:
+        ratio(avgComments, followers) === null
+          ? null
+          : (ratio(avgComments, followers) as number) * 100,
       format: "percent",
       explanation: "How much of your audience writes a comment.",
       sufficient: avgComments !== null && followers > 0,
@@ -326,7 +355,10 @@ export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cad
     {
       key: "commentToLike",
       label: "Comment-to-like ratio",
-      value: ratio(avgComments, avgLikes) === null ? null : (ratio(avgComments, avgLikes) as number) * 100,
+      value:
+        ratio(avgComments, avgLikes) === null
+          ? null
+          : (ratio(avgComments, avgLikes) as number) * 100,
       format: "percent",
       explanation: "Conversation depth: comments earned for every 100 likes.",
       sufficient: avgComments !== null && avgLikes !== null && avgLikes > 0,
@@ -334,7 +366,8 @@ export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cad
     {
       key: "viewsPerFollower",
       label: "Views per follower",
-      value: ratio(avgViews, followers) === null ? null : (ratio(avgViews, followers) as number) * 100,
+      value:
+        ratio(avgViews, followers) === null ? null : (ratio(avgViews, followers) as number) * 100,
       format: "percent",
       explanation: "Reach of a typical video relative to your follower base.",
       sufficient: avgViews !== null && followers > 0,
@@ -381,7 +414,8 @@ export function computeKpis(input: AnalyticsInput, content: ContentAnalysis, cad
       format: "percent",
       explanation: "How much post performance swings around your average. Lower is steadier.",
       sufficient: content.volatilityPercent !== null && content.sample.posts >= 5,
-      caveat: content.volatilityPercent === null ? "At least 5 analysed posts are required." : undefined,
+      caveat:
+        content.volatilityPercent === null ? "At least 5 analysed posts are required." : undefined,
     },
     {
       key: "bestPost",
@@ -452,7 +486,13 @@ export function analyticalScores(
 
   const s = input.signals;
   const profile = clamp(
-    (s.biographyLength >= 120 ? 30 : s.biographyLength >= 20 ? 20 : s.biographyLength > 0 ? 10 : 0) +
+    (s.biographyLength >= 120
+      ? 30
+      : s.biographyLength >= 20
+        ? 20
+        : s.biographyLength > 0
+          ? 10
+          : 0) +
       (s.externalLinks > 0 ? 25 : 0) +
       (s.hasCategory ? 15 : 0) +
       (s.isBusinessAccount ? 15 : 0) +
@@ -464,7 +504,10 @@ export function analyticalScores(
       key: "engagement",
       label: "Engagement vs peers",
       value: engagementVsPeers,
-      basis: engagementVsPeers === null ? "Needs a comparable peer set" : "Relative to the peer median engagement rate",
+      basis:
+        engagementVsPeers === null
+          ? "Needs a comparable peer set"
+          : "Relative to the peer median engagement rate",
     },
     {
       key: "consistency",

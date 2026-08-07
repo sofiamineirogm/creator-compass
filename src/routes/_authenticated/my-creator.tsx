@@ -11,7 +11,6 @@ import {
   Loader2,
   Music2,
   RefreshCw,
-
   Trash2,
   Users,
 } from "lucide-react";
@@ -34,7 +33,6 @@ import { formatCompact } from "@/lib/creator-types";
 import { CATEGORIES } from "@/lib/marketplace-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreatorAnalytics } from "@/components/creator-analytics/analytics-dashboard";
-
 
 const TITLE = "My Creator | CreatorIQ";
 const DESCRIPTION =
@@ -71,7 +69,9 @@ function MyCreatorPage() {
     <main className="min-h-screen bg-background pb-20">
       <div className="mx-auto w-full max-w-5xl px-4 pt-20 sm:px-8 sm:pt-24">
         <header className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">My Creator</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+            My Creator
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Your creator identity: profile, connected social accounts and performance.
           </p>
@@ -142,7 +142,13 @@ function Onboarding({
   );
 }
 
-function ProfileForm({ identity, onChanged }: { identity: CreatorIdentity | null; onChanged: () => void }) {
+function ProfileForm({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity | null;
+  onChanged: () => void;
+}) {
   const save = useServerFn(saveMyCreatorProfile);
   const [form, setForm] = useState({
     displayName: "",
@@ -281,8 +287,8 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
       <div>
         <h2 className="font-display text-lg font-semibold">Connect your social account</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your <strong>public</strong> handle. This links your public profile for analysis — it is not
-          an official login, and it does not grant access to private insights.
+          Enter your <strong>public</strong> handle. This links your public profile for analysis —
+          it is not an official login, and it does not grant access to private insights.
         </p>
       </div>
       <div className="flex gap-2">
@@ -291,10 +297,16 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
             key={p}
             onClick={() => setPlatform(p)}
             className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium ${
-              platform === p ? "border-primary bg-card text-foreground" : "border-border text-muted-foreground"
+              platform === p
+                ? "border-primary bg-card text-foreground"
+                : "border-border text-muted-foreground"
             }`}
           >
-            {p === "instagram" ? <Instagram className="h-4 w-4" aria-hidden /> : <Music2 className="h-4 w-4" aria-hidden />}
+            {p === "instagram" ? (
+              <Instagram className="h-4 w-4" aria-hidden />
+            ) : (
+              <Music2 className="h-4 w-4" aria-hidden />
+            )}
             {PLATFORM_LABELS[p]}
           </button>
         ))}
@@ -323,7 +335,13 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
   );
 }
 
-function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onChanged: () => void }) {
+function ConfirmStep({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity;
+  onChanged: () => void;
+}) {
   const save = useServerFn(saveMyCreatorProfile);
   const profile = identity.profile!;
 
@@ -351,7 +369,9 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
     <section className="surface space-y-4 p-5">
       <div>
         <h2 className="font-display text-lg font-semibold">Confirm your profile</h2>
-        <p className="text-sm text-muted-foreground">Review, then publish to unlock your creator dashboard.</p>
+        <p className="text-sm text-muted-foreground">
+          Review, then publish to unlock your creator dashboard.
+        </p>
       </div>
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         <Row label="Display name" value={profile.displayName} />
@@ -359,7 +379,9 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
         <Row label="Location" value={profile.location ?? "—"} />
         <Row
           label="Connected accounts"
-          value={identity.socialAccounts.map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`).join(", ")}
+          value={identity.socialAccounts
+            .map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`)
+            .join(", ")}
         />
       </dl>
       <button
@@ -385,7 +407,13 @@ function scoreLabel(value: number | null): string {
 
 /* ------------------------------- dashboard ------------------------------- */
 
-function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; onChanged: () => void }) {
+function CreatorDashboard({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity;
+  onChanged: () => void;
+}) {
   const profile = identity.profile!;
   const { metrics, benchmark } = identity;
 
@@ -394,13 +422,19 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
       <section className="surface flex flex-wrap items-center gap-4 p-5">
         <div className="h-16 w-16 overflow-hidden rounded-full bg-muted">
           {profile.profileImage ? (
-            <img src={profile.profileImage} alt={`${profile.displayName} profile picture`} className="h-full w-full object-cover" />
+            <img
+              src={profile.profileImage}
+              alt={`${profile.displayName} profile picture`}
+              className="h-full w-full object-cover"
+            />
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="font-display text-xl font-semibold">{profile.displayName}</h2>
-            {profile.isPublished ? <BadgeCheck className="h-4 w-4 text-primary" aria-hidden /> : null}
+            {profile.isPublished ? (
+              <BadgeCheck className="h-4 w-4 text-primary" aria-hidden />
+            ) : null}
           </div>
           {identity.socialAccounts.length ? (
             <p className="text-sm text-muted-foreground">
@@ -446,7 +480,6 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
 
       <CreatorAnalytics identity={identity} />
 
-
       <section className="surface p-5">
         <h3 className="font-display text-lg font-semibold">Similar creators</h3>
         {identity.similar.length ? (
@@ -466,7 +499,9 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
                     <span className="block text-xs text-muted-foreground">
                       {formatCompact(c.followers)} followers · {c.engagementRate.toFixed(2)}%
                     </span>
-                    <span className="mt-0.5 block text-[11px] text-muted-foreground">{c.reason}</span>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {c.reason}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -552,7 +587,15 @@ function SocialRow({
 
 /* --------------------------------- bits ---------------------------------- */
 
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <label className={`block text-sm ${className ?? ""}`}>
       <span className="mb-1 block font-medium text-muted-foreground">{label}</span>
@@ -578,4 +621,3 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-

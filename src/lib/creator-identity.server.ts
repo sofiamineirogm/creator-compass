@@ -28,7 +28,6 @@ import {
   type SocialAccount,
 } from "./creator-identity";
 
-
 type Row = Record<string, any>;
 type Db = SupabaseClient<any, any, any>;
 
@@ -86,7 +85,9 @@ async function loadSocialAccounts(db: Db, profileId: string): Promise<SocialAcco
 }
 
 /** Analysis data for a connected handle, if it has ever been analysed. */
-async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMetrics | null; creatorRow: Row | null }> {
+async function metricsFor(
+  account: SocialAccount,
+): Promise<{ metrics: CreatorMetrics | null; creatorRow: Row | null }> {
   const db = publicClient() as unknown as Db;
   const { data: creator } = await db
     .from("creators")
@@ -194,7 +195,11 @@ async function loadPeerRows(metrics: CreatorMetrics): Promise<PeerRow[]> {
  * the creator has one, and a comparable follower band. Follower count alone is
  * never sufficient — a real analysis is required.
  */
-function comparablePeers(peers: PeerRow[], metrics: CreatorMetrics, category: string | null): PeerRow[] {
+function comparablePeers(
+  peers: PeerRow[],
+  metrics: CreatorMetrics,
+  category: string | null,
+): PeerRow[] {
   return peers.filter(
     (r) =>
       withinFollowerBand(Number(r["followers"] ?? 0), metrics.followers) &&
@@ -215,7 +220,9 @@ function benchmarkFrom(
     accessibility: metrics.accessibilityScore,
     growth: metrics.growthScore,
   };
-  const hasRealScores = Object.values(scores).every((v) => typeof v === "number" && Number.isFinite(v));
+  const hasRealScores = Object.values(scores).every(
+    (v) => typeof v === "number" && Number.isFinite(v),
+  );
   const hasRealProfile = metrics.followers > 0 && (metrics.engagementRate ?? 0) > 0;
   if (!hasRealScores || !hasRealProfile) return null;
 
@@ -270,8 +277,14 @@ function benchmarkFrom(
  * category + a real analysis. Ranked by relative follower distance, then
  * engagement closeness. No similarity percentage is produced.
  */
-function similarCreators(peers: PeerRow[], metrics: CreatorMetrics, category: string | null): SimilarCreator[] {
-  const banded = peers.filter((r) => withinFollowerBand(Number(r["followers"] ?? 0), metrics.followers));
+function similarCreators(
+  peers: PeerRow[],
+  metrics: CreatorMetrics,
+  category: string | null,
+): SimilarCreator[] {
+  const banded = peers.filter((r) =>
+    withinFollowerBand(Number(r["followers"] ?? 0), metrics.followers),
+  );
   const sameCategory = category ? banded.filter((r) => r["category"] === category) : [];
   const pool = sameCategory.length >= MINIMUM_SIMILAR_CREATORS ? sameCategory : banded;
 
@@ -324,8 +337,7 @@ function withConnectedAccountIdentity(
   const realBio = text(creatorRow["biography"]);
 
   // Stored profile copy is only trusted when it was authored for this handle.
-  const storedMatchesAccount =
-    text(profile.handle)?.toLowerCase() === account.handle.toLowerCase();
+  const storedMatchesAccount = text(profile.handle)?.toLowerCase() === account.handle.toLowerCase();
   const storedName = storedMatchesAccount ? text(profile.displayName) : null;
 
   return {
@@ -340,7 +352,6 @@ function withConnectedAccountIdentity(
     location: realCountry,
   };
 }
-
 
 /* ------------------------------- analytics -------------------------------- */
 
@@ -361,7 +372,8 @@ function peerStatsFrom(peers: PeerRow[]): PeerStats {
     if (er !== null) engagementRates.push(er);
     if (followers > 0 && likes !== null) likesPerFollower.push((likes / followers) * 100);
     if (followers > 0 && comments !== null) commentsPerFollower.push((comments / followers) * 100);
-    if (likes !== null && likes > 0 && comments !== null) commentToLike.push((comments / likes) * 100);
+    if (likes !== null && likes > 0 && comments !== null)
+      commentToLike.push((comments / likes) * 100);
     if (followers > 0 && views !== null) viewsPerFollower.push((views / followers) * 100);
   }
 
@@ -506,8 +518,6 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
   };
 }
 
-
-
 export interface CreatorProfileInput {
   displayName: string;
   bio?: string | null;
@@ -519,7 +529,11 @@ export interface CreatorProfileInput {
 }
 
 function slugHandle(name: string): string {
-  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24) || "creator";
+  const base =
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "")
+      .slice(0, 24) || "creator";
   return `${base}${Math.floor(Math.random() * 9000 + 1000)}`;
 }
 
@@ -563,7 +577,8 @@ export async function connectSocialAccount(
   if (!profile) throw new Error("Create your creator profile first.");
 
   const handle = normalizeUsername(input.handle);
-  if (!handle) throw new Error("Enter a valid handle — letters, numbers, dots and underscores only.");
+  if (!handle)
+    throw new Error("Enter a valid handle — letters, numbers, dots and underscores only.");
   const platform: Platform = input.platform === "tiktok" ? "tiktok" : "instagram";
 
   const { data, error } = await db
@@ -592,7 +607,11 @@ export async function connectSocialAccount(
   return mapSocialAccount(data as Row);
 }
 
-export async function disconnectSocialAccount(db: Db, userId: string, id: string): Promise<{ ok: true }> {
+export async function disconnectSocialAccount(
+  db: Db,
+  userId: string,
+  id: string,
+): Promise<{ ok: true }> {
   const profile = await loadProfileRow(db, userId);
   if (!profile) throw new Error("No creator profile.");
   const { data, error } = await db
@@ -628,7 +647,10 @@ export async function syncSocialAccount(db: Db, userId: string, id: string) {
 
   const account = mapSocialAccount(data as Row);
   const { analyzeCreatorHandler } = await import("./analyze.server");
-  const result = await analyzeCreatorHandler({ platform: account.platform, username: account.handle });
+  const result = await analyzeCreatorHandler({
+    platform: account.platform,
+    username: account.handle,
+  });
 
   await db
     .from("social_accounts")

@@ -25,13 +25,20 @@ export function PeerComparisonBars({ kpis }: { kpis: Kpi[] }) {
           <li key={kpi.key}>
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="font-medium">{kpi.label}</span>
-              <span className={`text-xs font-semibold ${ahead ? "text-primary" : "text-muted-foreground"}`}>
+              <span
+                className={`text-xs font-semibold ${ahead ? "text-primary" : "text-muted-foreground"}`}
+              >
                 {ahead ? "+" : ""}
                 {peer.deltaPercent.toFixed(1)}% vs peer median
               </span>
             </div>
             <div className="mt-2 space-y-1.5">
-              <Bar label="You" value={formatKpi(kpi.value, kpi.format)} width={you} tone="primary" />
+              <Bar
+                label="You"
+                value={formatKpi(kpi.value, kpi.format)}
+                width={you}
+                tone="primary"
+              />
               <Bar
                 label={`Peers (${peer.peerCount})`}
                 value={formatKpi(peer.peerMedian, kpi.format)}
@@ -59,7 +66,9 @@ function Bar({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-20 shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="w-20 shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
       <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
         <span
           className={`block h-full rounded-full ${tone === "primary" ? "bg-ember" : "bg-muted-foreground/40"}`}
@@ -127,8 +136,8 @@ export function PostPerformanceChart({ content }: { content: ContentAnalysis }) 
   return (
     <figure>
       <figcaption className="text-xs text-muted-foreground">
-        Interactions per analysed post, oldest to newest. The line marks your median post; taller bars
-        are outliers.
+        Interactions per analysed post, oldest to newest. The line marks your median post; taller
+        bars are outliers.
       </figcaption>
       <div className="relative mt-4 flex h-36 items-end gap-1.5">
         <div
@@ -172,7 +181,8 @@ export function CadenceTimeline({ cadence }: { cadence: Cadence }) {
     <figure>
       <figcaption className="text-xs text-muted-foreground">
         Publishing activity across the last {Math.round(cadence.spanDays)} days —{" "}
-        {cadence.postsPerWeek.toFixed(1)} posts per week, median gap {cadence.medianGapDays.toFixed(1)} days.
+        {cadence.postsPerWeek.toFixed(1)} posts per week, median gap{" "}
+        {cadence.medianGapDays.toFixed(1)} days.
       </figcaption>
       <div className="relative mt-4 h-8">
         <div className="absolute inset-x-0 top-3.5 h-px bg-border" />

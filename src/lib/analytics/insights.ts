@@ -5,7 +5,14 @@
  * data. Generic social-media advice is deliberately impossible to emit here:
  * each generator returns nothing unless its evidence exists.
  */
-import { formatKpi, type AnalyticalScore, type AnalyticsInput, type Cadence, type ContentAnalysis, type Kpi } from "./kpi";
+import {
+  formatKpi,
+  type AnalyticalScore,
+  type AnalyticsInput,
+  type Cadence,
+  type ContentAnalysis,
+  type Kpi,
+} from "./kpi";
 
 export type InsightCategory = "performance" | "content" | "consistency" | "audience" | "profile";
 
@@ -76,9 +83,11 @@ export function buildInsights(
       category: "performance",
       priority: "medium",
       title: "Your videos reach well beyond your follower base",
-      observation: "Average views exceed your follower count, so distribution is coming from non-followers.",
+      observation:
+        "Average views exceed your follower count, so distribution is coming from non-followers.",
       evidence: `Average views are ${pct(views.value as number)} of your follower count.`,
-      recommendation: "Add a clear follow or profile CTA to video content — the reach is already there to convert.",
+      recommendation:
+        "Add a clear follow or profile CTA to video content — the reach is already there to convert.",
       kpis: ["viewsPerFollower", "avgViews"],
     });
   }
@@ -91,9 +100,11 @@ export function buildInsights(
       category: "content",
       priority: "high",
       title: "A small number of posts carry your performance",
-      observation: "Your strongest post performs far above your typical post rather than slightly above it.",
+      observation:
+        "Your strongest post performs far above your typical post rather than slightly above it.",
       evidence: `Your best analysed post earned ${formatKpi(content.best.interactions, "count")} interactions — ${content.peakMultiple.toFixed(1)}× your median post.`,
-      recommendation: "Break down what that post did differently — topic, hook, format — and produce two variations.",
+      recommendation:
+        "Break down what that post did differently — topic, hook, format — and produce two variations.",
       kpis: ["peakMultiple", "bestPost", "medianPost"],
     });
   }
@@ -110,7 +121,8 @@ export function buildInsights(
       title: "Your engagement is concentrated in a few posts",
       observation: "Total engagement depends disproportionately on your top three posts.",
       evidence: `Your top 3 posts hold ${pct(content.topThreeShare)} of all interactions across ${content.sample.posts} analysed posts, against ${pct(content.expectedTopThreeShare)} if performance were even.`,
-      recommendation: "Raise the floor: repeat your proven structure on weaker themes instead of chasing new formats.",
+      recommendation:
+        "Raise the floor: repeat your proven structure on weaker themes instead of chasing new formats.",
       kpis: ["bestPost", "medianPost"],
     });
   }
@@ -159,9 +171,11 @@ export function buildInsights(
       category: "consistency",
       priority: "medium",
       title: "Post performance swings widely",
-      observation: "Results vary strongly from post to post rather than clustering around your average.",
+      observation:
+        "Results vary strongly from post to post rather than clustering around your average.",
       evidence: `Post-to-post variation is ${pct(volatility.value as number)} of your average performance.`,
-      recommendation: "Standardise the opening seconds and caption structure of your posts to reduce the spread.",
+      recommendation:
+        "Standardise the opening seconds and caption structure of your posts to reduce the spread.",
       kpis: ["volatility"],
     });
   }
@@ -175,7 +189,9 @@ export function buildInsights(
       id: "conversation-depth",
       category: "audience",
       priority: low ? "high" : "low",
-      title: low ? "Your audience likes far more than it comments" : "Your audience actively comments",
+      title: low
+        ? "Your audience likes far more than it comments"
+        : "Your audience actively comments",
       observation: low
         ? "Passive engagement dominates, which limits conversation depth signals."
         : "Comment volume is healthy relative to likes.",
