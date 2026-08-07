@@ -99,6 +99,10 @@ export interface AnalyzeResult {
   report: CreatorReport;
   cached: boolean;
   fetchedAt: string;
+  /** When the cached copy goes stale, if known. */
+  expiresAt?: string | null;
+  /** User-facing note about cache/rate-limit behaviour. */
+  notice?: string | null;
 }
 
 export class CreatorLookupError extends Error {

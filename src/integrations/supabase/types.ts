@@ -56,6 +56,278 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_profiles: {
+        Row: {
+          company_name: string
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          is_verified: boolean
+          location: string | null
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          company_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          is_verified?: boolean
+          location?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          is_verified?: boolean
+          location?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      campaign_applications: {
+        Row: {
+          attachments: Json
+          availability: string | null
+          brand_note: string | null
+          campaign_id: string
+          cover_message: string
+          created_at: string
+          creator_profile_id: string | null
+          creator_user_id: string
+          currency: string
+          id: string
+          is_invitation: boolean
+          portfolio_examples: Json
+          proposed_price: number
+          responded_at: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json
+          availability?: string | null
+          brand_note?: string | null
+          campaign_id: string
+          cover_message?: string
+          created_at?: string
+          creator_profile_id?: string | null
+          creator_user_id: string
+          currency?: string
+          id?: string
+          is_invitation?: boolean
+          portfolio_examples?: Json
+          proposed_price?: number
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json
+          availability?: string | null
+          brand_note?: string | null
+          campaign_id?: string
+          cover_message?: string
+          created_at?: string
+          creator_profile_id?: string | null
+          creator_user_id?: string
+          currency?: string
+          id?: string
+          is_invitation?: boolean
+          portfolio_examples?: Json
+          proposed_price?: number
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_applications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_applications_creator_profile_id_fkey"
+            columns: ["creator_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          applicants_count: number
+          application_deadline: string | null
+          audience_requirements: string | null
+          brand_profile_id: string | null
+          brand_user_id: string
+          budget_max: number
+          budget_min: number
+          category: string | null
+          created_at: string
+          creator_categories: string[]
+          creators_needed: number
+          currency: string
+          deliverables: string[]
+          description: string
+          ends_at: string | null
+          expected_content: string | null
+          id: string
+          languages: string[]
+          location: string | null
+          location_type: Database["public"]["Enums"]["campaign_location_type"]
+          max_followers: number | null
+          min_engagement_rate: number
+          min_followers: number
+          objectives: string[]
+          payment_model: Database["public"]["Enums"]["payment_model"]
+          platforms: string[]
+          starts_at: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          target_audience: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applicants_count?: number
+          application_deadline?: string | null
+          audience_requirements?: string | null
+          brand_profile_id?: string | null
+          brand_user_id: string
+          budget_max?: number
+          budget_min?: number
+          category?: string | null
+          created_at?: string
+          creator_categories?: string[]
+          creators_needed?: number
+          currency?: string
+          deliverables?: string[]
+          description?: string
+          ends_at?: string | null
+          expected_content?: string | null
+          id?: string
+          languages?: string[]
+          location?: string | null
+          location_type?: Database["public"]["Enums"]["campaign_location_type"]
+          max_followers?: number | null
+          min_engagement_rate?: number
+          min_followers?: number
+          objectives?: string[]
+          payment_model?: Database["public"]["Enums"]["payment_model"]
+          platforms?: string[]
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applicants_count?: number
+          application_deadline?: string | null
+          audience_requirements?: string | null
+          brand_profile_id?: string | null
+          brand_user_id?: string
+          budget_max?: number
+          budget_min?: number
+          category?: string | null
+          created_at?: string
+          creator_categories?: string[]
+          creators_needed?: number
+          currency?: string
+          deliverables?: string[]
+          description?: string
+          ends_at?: string | null
+          expected_content?: string | null
+          id?: string
+          languages?: string[]
+          location?: string | null
+          location_type?: Database["public"]["Enums"]["campaign_location_type"]
+          max_followers?: number | null
+          min_engagement_rate?: number
+          min_followers?: number
+          objectives?: string[]
+          payment_model?: Database["public"]["Enums"]["payment_model"]
+          platforms?: string[]
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_brand_profile_id_fkey"
+            columns: ["brand_profile_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          application_id: string | null
+          brand_user_id: string
+          campaign_id: string | null
+          created_at: string
+          creator_user_id: string
+          id: string
+          last_message_at: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          brand_user_id: string
+          campaign_id?: string | null
+          created_at?: string
+          creator_user_id: string
+          id?: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          brand_user_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          creator_user_id?: string
+          id?: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_posts: {
         Row: {
           caption: string | null
@@ -105,6 +377,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creator_profiles: {
+        Row: {
+          availability: string
+          avatar_url: string | null
+          bio: string | null
+          categories: string[]
+          created_at: string
+          currency: string
+          display_name: string
+          handle: string | null
+          headline: string | null
+          id: string
+          instagram_username: string | null
+          is_boosted: boolean
+          is_published: boolean
+          is_verified: boolean
+          languages: string[]
+          location: string | null
+          max_price: number | null
+          past_collaborations: Json
+          portfolio: Json
+          starting_price: number
+          tiktok_username: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: string
+          avatar_url?: string | null
+          bio?: string | null
+          categories?: string[]
+          created_at?: string
+          currency?: string
+          display_name?: string
+          handle?: string | null
+          headline?: string | null
+          id?: string
+          instagram_username?: string | null
+          is_boosted?: boolean
+          is_published?: boolean
+          is_verified?: boolean
+          languages?: string[]
+          location?: string | null
+          max_price?: number | null
+          past_collaborations?: Json
+          portfolio?: Json
+          starting_price?: number
+          tiktok_username?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: string
+          avatar_url?: string | null
+          bio?: string | null
+          categories?: string[]
+          created_at?: string
+          currency?: string
+          display_name?: string
+          handle?: string | null
+          headline?: string | null
+          id?: string
+          instagram_username?: string | null
+          is_boosted?: boolean
+          is_published?: boolean
+          is_verified?: boolean
+          languages?: string[]
+          location?: string | null
+          max_price?: number | null
+          past_collaborations?: Json
+          portfolio?: Json
+          starting_price?: number
+          tiktok_username?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       creators: {
         Row: {
@@ -184,6 +534,44 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          attachments: Json
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_user_id: string
+        }
+        Insert: {
+          attachments?: Json
+          body?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_user_id: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -261,6 +649,35 @@ export type Database = {
           },
         ]
       }
+      saved_campaigns: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_creators: {
         Row: {
           created_at: string
@@ -327,6 +744,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      social_profile_cache: {
+        Row: {
+          analytics_data: Json | null
+          created_at: string
+          expires_at: string | null
+          fetch_error: string | null
+          fetch_status: Database["public"]["Enums"]["cache_fetch_status"]
+          id: string
+          last_fetched_at: string | null
+          locked_at: string | null
+          platform: Database["public"]["Enums"]["platform"]
+          profile_data: Json | null
+          profile_url: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          analytics_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          fetch_error?: string | null
+          fetch_status?: Database["public"]["Enums"]["cache_fetch_status"]
+          id?: string
+          last_fetched_at?: string | null
+          locked_at?: string | null
+          platform: Database["public"]["Enums"]["platform"]
+          profile_data?: Json | null
+          profile_url?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          analytics_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          fetch_error?: string | null
+          fetch_status?: Database["public"]["Enums"]["cache_fetch_status"]
+          id?: string
+          last_fetched_at?: string | null
+          locked_at?: string | null
+          platform?: Database["public"]["Enums"]["platform"]
+          profile_data?: Json | null
+          profile_url?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -397,10 +862,42 @@ export type Database = {
         }
         Returns: boolean
       }
+      in_conversation: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      owns_campaign: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "guest" | "creator" | "brand" | "agency" | "admin"
-      plan_tier: "free" | "creator" | "creator_pro" | "agency" | "enterprise"
+      application_status:
+        | "applied"
+        | "shortlisted"
+        | "negotiation"
+        | "accepted"
+        | "rejected"
+        | "completed"
+        | "withdrawn"
+      cache_fetch_status: "pending" | "success" | "error"
+      campaign_location_type: "remote" | "in_person" | "hybrid"
+      campaign_status: "draft" | "open" | "closed" | "completed" | "archived"
+      payment_model:
+        | "fixed"
+        | "per_deliverable"
+        | "per_post"
+        | "gifted"
+        | "commission"
+        | "hybrid"
+      plan_tier:
+        | "free"
+        | "creator"
+        | "creator_pro"
+        | "agency"
+        | "enterprise"
+        | "brand"
       platform: "instagram" | "tiktok"
     }
     CompositeTypes: {
@@ -530,7 +1027,34 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["guest", "creator", "brand", "agency", "admin"],
-      plan_tier: ["free", "creator", "creator_pro", "agency", "enterprise"],
+      application_status: [
+        "applied",
+        "shortlisted",
+        "negotiation",
+        "accepted",
+        "rejected",
+        "completed",
+        "withdrawn",
+      ],
+      cache_fetch_status: ["pending", "success", "error"],
+      campaign_location_type: ["remote", "in_person", "hybrid"],
+      campaign_status: ["draft", "open", "closed", "completed", "archived"],
+      payment_model: [
+        "fixed",
+        "per_deliverable",
+        "per_post",
+        "gifted",
+        "commission",
+        "hybrid",
+      ],
+      plan_tier: [
+        "free",
+        "creator",
+        "creator_pro",
+        "agency",
+        "enterprise",
+        "brand",
+      ],
       platform: ["instagram", "tiktok"],
     },
   },

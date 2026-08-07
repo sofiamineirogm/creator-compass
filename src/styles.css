@@ -226,3 +226,20 @@
 @utility animate-rise {
   animation: rise-in 0.7s var(--ease-out-soft) both;
 }
+
+@utility input-base {
+  min-height: 2.75rem;
+  padding-block: 0.625rem;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-foreground);
+  outline: none;
+
+  &:focus {
+    box-shadow: 0 0 0 2px var(--color-ring);
+  }
+}
