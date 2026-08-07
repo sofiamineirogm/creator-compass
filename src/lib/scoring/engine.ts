@@ -11,11 +11,14 @@ import { defaultScoringConfig, type ScoringConfig } from "./config";
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const round = (value: number, digits = 1) => Number(value.toFixed(digits));
 
-export function computeEngagementRate(creator: CreatorProfile): number {
-  if (creator.followers <= 0) return 0;
+/** Null when there is no usable post data — never a fabricated zero. */
+export function computeEngagementRate(creator: CreatorProfile): number | null {
+  if (creator.followers <= 0) return null;
+  if (creator.avgLikes === null || creator.avgComments === null) return null;
   const interactions = creator.avgLikes + creator.avgComments;
   return round((interactions / creator.followers) * 100, 2);
 }
+
 
 function scoreBrand(creator: CreatorProfile, cfg: ScoringConfig): number {
   const c = cfg.brand;
