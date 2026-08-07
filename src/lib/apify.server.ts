@@ -9,6 +9,13 @@ import {
   type Platform,
 } from "./creator-types";
 import { computeEngagementRate } from "./scoring/engine";
+/** Providers return the literal string "None" for missing categories. */
+function cleanCategory(value: unknown): string | null {
+  const v = typeof value === "string" ? value.trim() : "";
+  if (!v || v.toLowerCase() === "none" || v.toLowerCase() === "null") return null;
+  return v;
+}
+
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/apify";
 const ACTORS: Record<Platform, string> = {
@@ -135,7 +142,7 @@ function mapInstagram(item: Record<string, unknown>): CreatorProfile {
     avgComments: avg.comments,
     avgViews: avg.views,
     engagementRate: 0,
-    category: (item["businessCategoryName"] as string) ?? null,
+    category: cleanCategory(item["businessCategoryName"]),
     country: null,
     externalLinks: links.filter((l) => l.url),
     posts,
@@ -191,8 +198,9 @@ function mapTikTok(items: Record<string, unknown>[]): CreatorProfile {
     avgComments: avg.comments,
     avgViews: avg.views,
     engagementRate: 0,
-    category:
-      ((author["commerceUserInfo"] as Record<string, unknown> | undefined)?.["category"] as string) ?? null,
+    category: cleanCategory(
+      (author["commerceUserInfo"] as Record<string, unknown> | undefined)?.["category"],
+    ),
     country: null,
     externalLinks: typeof bioLink === "string" && bioLink ? [{ title: "Bio link", url: bioLink }] : [],
     posts,
