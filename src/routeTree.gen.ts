@@ -15,9 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as AuthenticatedMarketplaceApplicationsRouteImport } from './routes/_authenticated/marketplace.applications'
+import { Route as AuthenticatedMarketplaceManageRouteImport } from './routes/_authenticated/marketplace.manage'
 import { Route as AuthenticatedMarketplaceSavedRouteImport } from './routes/_authenticated/marketplace.saved'
 import { Route as CreatorPlatformUsernameRouteImport } from './routes/creator.$platform.$username'
 import { Route as MarketplaceCampaignsCampaignIdRouteImport } from './routes/marketplace.campaigns.$campaignId'
+import { Route as AuthenticatedMarketplaceManageCampaignIdRouteImport } from './routes/_authenticated/marketplace.manage.$campaignId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,6 +51,12 @@ const AuthenticatedMarketplaceApplicationsRoute =
     path: '/marketplace/applications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketplaceManageRoute =
+  AuthenticatedMarketplaceManageRouteImport.update({
+    id: '/marketplace/manage',
+    path: '/marketplace/manage',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketplaceSavedRoute =
   AuthenticatedMarketplaceSavedRouteImport.update({
     id: '/marketplace/saved',
@@ -66,6 +74,12 @@ const MarketplaceCampaignsCampaignIdRoute =
     path: '/marketplace/campaigns/$campaignId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedMarketplaceManageCampaignIdRoute =
+  AuthenticatedMarketplaceManageCampaignIdRouteImport.update({
+    id: '/$campaignId',
+    path: '/$campaignId',
+    getParentRoute: () => AuthenticatedMarketplaceManageRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,9 +87,11 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
   '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
+  '/marketplace/manage/$campaignId': typeof AuthenticatedMarketplaceManageCampaignIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,9 +99,11 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
   '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
+  '/marketplace/manage/$campaignId': typeof AuthenticatedMarketplaceManageCampaignIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,9 +113,11 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace/': typeof MarketplaceIndexRoute
   '/_authenticated/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/_authenticated/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
   '/_authenticated/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
+  '/_authenticated/marketplace/manage/$campaignId': typeof AuthenticatedMarketplaceManageCampaignIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,9 +127,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/marketplace/'
     | '/marketplace/applications'
+    | '/marketplace/manage'
     | '/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
+    | '/marketplace/manage/$campaignId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,9 +139,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/marketplace'
     | '/marketplace/applications'
+    | '/marketplace/manage'
     | '/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
+    | '/marketplace/manage/$campaignId'
   id:
     | '__root__'
     | '/'
@@ -128,9 +152,11 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/marketplace/'
     | '/_authenticated/marketplace/applications'
+    | '/_authenticated/marketplace/manage'
     | '/_authenticated/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
+    | '/_authenticated/marketplace/manage/$campaignId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplaceApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketplace/manage': {
+      id: '/_authenticated/marketplace/manage'
+      path: '/marketplace/manage'
+      fullPath: '/marketplace/manage'
+      preLoaderRoute: typeof AuthenticatedMarketplaceManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketplace/saved': {
       id: '/_authenticated/marketplace/saved'
       path: '/marketplace/saved'
@@ -207,12 +240,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceCampaignsCampaignIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/marketplace/manage/$campaignId': {
+      id: '/_authenticated/marketplace/manage/$campaignId'
+      path: '/$campaignId'
+      fullPath: '/marketplace/manage/$campaignId'
+      preLoaderRoute: typeof AuthenticatedMarketplaceManageCampaignIdRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceManageRoute
+    }
   }
 }
+
+interface AuthenticatedMarketplaceManageRouteChildren {
+  AuthenticatedMarketplaceManageCampaignIdRoute: typeof AuthenticatedMarketplaceManageCampaignIdRoute
+}
+
+const AuthenticatedMarketplaceManageRouteChildren: AuthenticatedMarketplaceManageRouteChildren =
+  {
+    AuthenticatedMarketplaceManageCampaignIdRoute:
+      AuthenticatedMarketplaceManageCampaignIdRoute,
+  }
+
+const AuthenticatedMarketplaceManageRouteWithChildren =
+  AuthenticatedMarketplaceManageRoute._addFileChildren(
+    AuthenticatedMarketplaceManageRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketplaceApplicationsRoute: typeof AuthenticatedMarketplaceApplicationsRoute
+  AuthenticatedMarketplaceManageRoute: typeof AuthenticatedMarketplaceManageRouteWithChildren
   AuthenticatedMarketplaceSavedRoute: typeof AuthenticatedMarketplaceSavedRoute
 }
 
@@ -220,6 +276,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedMarketplaceApplicationsRoute:
     AuthenticatedMarketplaceApplicationsRoute,
+  AuthenticatedMarketplaceManageRoute:
+    AuthenticatedMarketplaceManageRouteWithChildren,
   AuthenticatedMarketplaceSavedRoute: AuthenticatedMarketplaceSavedRoute,
 }
 
