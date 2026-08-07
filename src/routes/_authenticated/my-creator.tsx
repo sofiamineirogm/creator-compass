@@ -377,6 +377,11 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
   );
 }
 
+/** Never render an invented score: show a dash when the report has no value. */
+function scoreLabel(value: number | null): string {
+  return typeof value === "number" && Number.isFinite(value) ? `${Math.round(value)}/100` : "—";
+}
+
 /* ------------------------------- dashboard ------------------------------- */
 
 function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; onChanged: () => void }) {
@@ -441,15 +446,20 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
               <Stat label="Engagement" value={`${metrics.engagementRate.toFixed(2)}%`} />
               <Stat label="Avg likes" value={formatCompact(Math.round(metrics.avgLikes))} />
               <Stat label="Posts" value={formatCompact(metrics.postsCount)} />
+              <Stat label="Following" value={formatCompact(metrics.following)} />
+              <Stat label="Avg comments" value={formatCompact(Math.round(metrics.avgComments))} />
+              {metrics.avgViews > 0 ? (
+                <Stat label="Avg views" value={formatCompact(Math.round(metrics.avgViews))} />
+              ) : null}
             </div>
             {metrics.overallScore !== null ? (
               <div className="mt-5 flex flex-wrap items-center gap-6">
                 <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
                 <ul className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
-                  <Row label="Brand" value={`${Math.round(metrics.brandScore ?? 0)}/100`} />
-                  <Row label="Engagement" value={`${Math.round(metrics.engagementScore ?? 0)}/100`} />
-                  <Row label="Accessibility" value={`${Math.round(metrics.accessibilityScore ?? 0)}/100`} />
-                  <Row label="Growth" value={`${Math.round(metrics.growthScore ?? 0)}/100`} />
+                  <Row label="Brand" value={scoreLabel(metrics.brandScore)} />
+                  <Row label="Engagement" value={scoreLabel(metrics.engagementScore)} />
+                  <Row label="Accessibility" value={scoreLabel(metrics.accessibilityScore)} />
+                  <Row label="Growth" value={scoreLabel(metrics.growthScore)} />
                 </ul>
               </div>
             ) : null}
@@ -477,7 +487,8 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            Benchmarks appear once your connected account has been analysed.
+            Not enough data yet — benchmarks appear once a real analysis with scores exists for a
+            connected account.
           </p>
         )}
       </section>

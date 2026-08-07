@@ -46,6 +46,7 @@ export interface CreatorMetrics {
   postsCount: number;
   avgLikes: number;
   avgComments: number;
+  avgViews: number;
   engagementRate: number;
   overallScore: number | null;
   brandScore: number | null;
