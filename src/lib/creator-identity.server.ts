@@ -286,6 +286,41 @@ function similarCreators(peers: PeerRow[], metrics: CreatorMetrics, category: st
     .map(({ score: _score, ...rest }) => rest);
 }
 
+function text(value: unknown): string | null {
+  const v = typeof value === "string" ? value.trim() : "";
+  return v && v.toLowerCase() !== "none" ? v : null;
+}
+
+/**
+ * The creator profile header must describe the connected social account.
+ * Real analysis data wins; stored profile data is only a fallback; nothing is
+ * invented — missing category/location stay null so the UI can say so.
+ */
+function withConnectedAccountIdentity(
+  profile: CreatorIdentityProfile,
+  account: SocialAccount,
+  creatorRow: Row,
+): CreatorIdentityProfile {
+  const realName = text(creatorRow["full_name"]);
+  const realCategory = text(creatorRow["category"]);
+  const realCountry = text(creatorRow["country"]);
+  const realAvatar = text(creatorRow["avatar_url"]);
+  const realBio = text(creatorRow["biography"]);
+
+  return {
+    ...profile,
+    displayName: realName ?? text(profile.displayName) ?? `@${account.handle}`,
+    handle: account.handle,
+    profileImage: realAvatar ?? profile.profileImage,
+    bio: realBio ?? profile.bio,
+    headline: profile.headline,
+    category: realCategory,
+    categories: realCategory ? [realCategory] : [],
+    location: realCountry,
+  };
+}
+
+
 export async function getCreatorIdentity(db: Db, userId: string): Promise<CreatorIdentity> {
   const row = await loadProfileRow(db, userId);
   if (!row) {
