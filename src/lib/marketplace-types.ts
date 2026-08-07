@@ -111,17 +111,17 @@ export interface Campaign {
 }
 
 export interface CampaignFilters {
-  search?: string;
-  platform?: string;
-  category?: string;
-  location?: string;
-  minBudget?: number;
-  deliverable?: string;
-  followerBand?: string;
-  maxEngagement?: number;
-  locationType?: LocationType | "any";
-  openOnly?: boolean;
-  sort?: CampaignSort;
+  search?: string | undefined;
+  platform?: string | undefined;
+  category?: string | undefined;
+  location?: string | undefined;
+  minBudget?: number | undefined;
+  deliverable?: string | undefined;
+  followerBand?: string | undefined;
+  maxEngagement?: number | undefined;
+  locationType?: LocationType | "any" | undefined;
+  openOnly?: boolean | undefined;
+  sort?: CampaignSort | undefined;
 }
 
 export type CampaignSort = "best_match" | "newest" | "highest_budget" | "deadline" | "most_relevant";

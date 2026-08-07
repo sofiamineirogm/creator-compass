@@ -9,8 +9,8 @@ export function CampaignCard({
   onToggleSave,
 }: {
   campaign: Campaign;
-  saved?: boolean;
-  onToggleSave?: (id: string) => void;
+  saved?: boolean | undefined;
+  onToggleSave?: ((id: string) => void) | undefined;
 }) {
   const days = daysUntil(campaign.applicationDeadline);
 
