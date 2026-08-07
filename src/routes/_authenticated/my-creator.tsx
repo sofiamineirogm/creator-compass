@@ -24,7 +24,6 @@ import {
   syncMySocialAccount,
 } from "@/lib/creator-identity.functions";
 import {
-  MINIMUM_BENCHMARK_PEERS,
   ONBOARDING_STEPS,
   PLATFORM_LABELS,
   nextOnboardingStep,
@@ -34,7 +33,8 @@ import type { Platform } from "@/lib/creator-types";
 import { formatCompact } from "@/lib/creator-types";
 import { CATEGORIES } from "@/lib/marketplace-types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScoreDial } from "@/components/score-dial";
+import { CreatorAnalytics } from "@/components/creator-analytics/analytics-dashboard";
+
 
 const TITLE = "My Creator | CreatorIQ";
 const DESCRIPTION =
