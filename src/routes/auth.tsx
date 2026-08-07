@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
+import { isDemoMode } from "@/lib/demo";
+
 
 const TITLE = "Sign in — CreatorIQ";
 const DESCRIPTION = "Sign in to save creators, revisit past analyses and unlock premium reports.";
