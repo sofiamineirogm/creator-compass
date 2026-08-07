@@ -117,7 +117,75 @@ async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMet
   };
 }
 
-function benchmarkFrom(creatorRow: Row, metrics: CreatorMetrics): CreatorBenchmark | null {
+/** Obvious demo/mock/placeholder handles must never pollute analytics. */
+function isDemoLikeUsername(username: string | null | undefined): boolean {
+  const u = String(username ?? "").toLowerCase();
+  if (!u) return true;
+  return /^(demo|test|sample|mock|example|fake)[._-]?/.test(u) || u.includes("creatoriq.test");
+}
+
+/** A row is usable for analytics only when its core metrics are real. */
+function hasUsableMetrics(row: Row): boolean {
+  return (
+    Number(row["followers"] ?? 0) > 0 &&
+    Number(row["engagement_rate"] ?? 0) > 0 &&
+    Number(row["posts_count"] ?? 0) > 0
+  );
+}
+
+/** Follower band: peers within a quarter to four times the creator's size. */
+function withinFollowerBand(followers: number, target: number): boolean {
+  if (target <= 0 || followers <= 0) return false;
+  return followers >= target * 0.25 && followers <= target * 4;
+}
+
+interface PeerRow extends Row {
+  hasReport: boolean;
+}
+
+/**
+ * Real, analysed creators on the same platform. One query, then filtered in
+ * memory so peer rules stay explicit and auditable.
+ */
+async function loadPeerRows(metrics: CreatorMetrics): Promise<PeerRow[]> {
+  const db = publicClient() as unknown as Db;
+  const { data } = await db
+    .from("creators")
+    .select(
+      "id, platform, username, full_name, avatar_url, followers, engagement_rate, posts_count, category, reports(id)",
+    )
+    .eq("platform", metrics.platform)
+    .limit(500);
+
+  return ((data as Row[]) ?? [])
+    .map((r) => ({ ...r, hasReport: Array.isArray(r["reports"]) && r["reports"].length > 0 }))
+    .filter(
+      (r) =>
+        r["username"] !== metrics.handle &&
+        !isDemoLikeUsername(r["username"]) &&
+        hasUsableMetrics(r) &&
+        r.hasReport,
+    );
+}
+
+/**
+ * Valid comparable peers for the benchmark: same platform, same category when
+ * the creator has one, and a comparable follower band. Follower count alone is
+ * never sufficient — a real analysis is required.
+ */
+function comparablePeers(peers: PeerRow[], metrics: CreatorMetrics, category: string | null): PeerRow[] {
+  return peers.filter(
+    (r) =>
+      withinFollowerBand(Number(r["followers"] ?? 0), metrics.followers) &&
+      (!category || r["category"] === category),
+  );
+}
+
+function benchmarkFrom(
+  creatorRow: Row,
+  metrics: CreatorMetrics,
+  peerCount: number,
+): CreatorBenchmark | null {
   // NO REAL DATA = NO METRIC. Never benchmark from invented scores.
   const scores = {
     overall: metrics.overallScore,
@@ -162,46 +230,55 @@ function benchmarkFrom(creatorRow: Row, metrics: CreatorMetrics): CreatorBenchma
     growth: scores.growth as number,
   });
 
+  // Too small a peer group -> no percentile at all, rather than a fabricated one.
+  const enoughPeers = peerCount >= MINIMUM_BENCHMARK_PEERS;
+
   return {
     peerGroup: result.peerGroup,
-    percentile: result.percentile,
-    standing: result.standing,
+    percentile: enoughPeers ? result.percentile : null,
+    standing: enoughPeers ? result.standing : null,
+    peerCount,
     averageEngagement: result.averageEngagement,
     top25Engagement: result.top25Engagement,
     top10Engagement: result.top10Engagement,
   };
 }
 
-async function similarCreators(metrics: CreatorMetrics, creatorRow: Row | null): Promise<SimilarCreator[]> {
-  const db = publicClient() as unknown as Db;
-  let query = db
-    .from("creators")
-    .select("platform, username, full_name, avatar_url, followers, engagement_rate")
-    .eq("platform", metrics.platform)
-    .neq("username", metrics.handle)
-    .limit(6);
+/**
+ * Heuristic (not the final similarity engine): platform + follower band +
+ * category + a real analysis. Ranked by relative follower distance, then
+ * engagement closeness. No similarity percentage is produced.
+ */
+function similarCreators(peers: PeerRow[], metrics: CreatorMetrics, category: string | null): SimilarCreator[] {
+  const banded = peers.filter((r) => withinFollowerBand(Number(r["followers"] ?? 0), metrics.followers));
+  const sameCategory = category ? banded.filter((r) => r["category"] === category) : [];
+  const pool = sameCategory.length >= MINIMUM_SIMILAR_CREATORS ? sameCategory : banded;
 
-  const category = creatorRow?.["category"];
-  if (category) query = query.eq("category", category);
+  if (pool.length < MINIMUM_SIMILAR_CREATORS) return [];
 
-  const { data } = await query;
-  const rows = ((data as Row[]) ?? [])
-    .filter((r) => Number(r["followers"] ?? 0) > 0 && r["username"] !== metrics.handle)
-    .map((r) => ({
-    platform: r["platform"] as Platform,
-    username: r["username"],
-    fullName: r["full_name"] ?? null,
-    avatarUrl: r["avatar_url"] ?? null,
-    followers: Number(r["followers"] ?? 0),
-    engagementRate: Number(r["engagement_rate"] ?? 0),
-  }));
-
-  return rows
-    .sort(
-      (a, b) =>
-        Math.abs(a.followers - metrics.followers) - Math.abs(b.followers - metrics.followers),
-    )
-    .slice(0, 4);
+  return pool
+    .map((r) => {
+      const followers = Number(r["followers"] ?? 0);
+      const engagementRate = Number(r["engagement_rate"] ?? 0);
+      const followerDistance = Math.abs(Math.log(followers / metrics.followers));
+      const engagementDistance = Math.abs(engagementRate - metrics.engagementRate);
+      const matchedCategory = Boolean(category) && r["category"] === category;
+      return {
+        platform: r["platform"] as Platform,
+        username: r["username"] as string,
+        fullName: r["full_name"] ?? null,
+        avatarUrl: r["avatar_url"] ?? null,
+        followers,
+        engagementRate,
+        reason: matchedCategory
+          ? `Same category (${category}) · comparable audience size · analysed profile`
+          : "Same platform · comparable audience size · analysed profile",
+        score: followerDistance + engagementDistance / 20,
+      };
+    })
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 4)
+    .map(({ score: _score, ...rest }) => rest);
 }
 
 export async function getCreatorIdentity(db: Db, userId: string): Promise<CreatorIdentity> {
