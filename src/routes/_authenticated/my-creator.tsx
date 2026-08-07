@@ -402,10 +402,23 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
             <h2 className="font-display text-xl font-semibold">{profile.displayName}</h2>
             {profile.isPublished ? <BadgeCheck className="h-4 w-4 text-primary" aria-hidden /> : null}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {[profile.headline, profile.category, profile.location].filter(Boolean).join(" · ") || "Creator"}
+          {identity.socialAccounts.length ? (
+            <p className="text-sm text-muted-foreground">
+              {identity.socialAccounts
+                .map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`)
+                .join(" · ")}
+            </p>
+          ) : null}
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            <span>Category: {profile.category ?? "Not available"}</span>
+            <span aria-hidden> · </span>
+            <span>Location: {profile.location ?? "Not available"}</span>
           </p>
+          {profile.headline ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{profile.headline}</p>
+          ) : null}
         </div>
+
         <Link
           to="/marketplace/profile"
           className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
