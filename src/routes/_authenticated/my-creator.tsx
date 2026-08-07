@@ -11,7 +11,6 @@ import {
   Loader2,
   Music2,
   RefreshCw,
-
   Trash2,
   Users,
 } from "lucide-react";
@@ -24,7 +23,6 @@ import {
   syncMySocialAccount,
 } from "@/lib/creator-identity.functions";
 import {
-  MINIMUM_BENCHMARK_PEERS,
   ONBOARDING_STEPS,
   PLATFORM_LABELS,
   nextOnboardingStep,
@@ -34,7 +32,7 @@ import type { Platform } from "@/lib/creator-types";
 import { formatCompact } from "@/lib/creator-types";
 import { CATEGORIES } from "@/lib/marketplace-types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScoreDial } from "@/components/score-dial";
+import { CreatorAnalytics } from "@/components/creator-analytics/analytics-dashboard";
 
 const TITLE = "My Creator | CreatorIQ";
 const DESCRIPTION =
@@ -71,7 +69,9 @@ function MyCreatorPage() {
     <main className="min-h-screen bg-background pb-20">
       <div className="mx-auto w-full max-w-5xl px-4 pt-20 sm:px-8 sm:pt-24">
         <header className="mb-6">
-          <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">My Creator</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+            My Creator
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Your creator identity: profile, connected social accounts and performance.
           </p>
@@ -142,7 +142,13 @@ function Onboarding({
   );
 }
 
-function ProfileForm({ identity, onChanged }: { identity: CreatorIdentity | null; onChanged: () => void }) {
+function ProfileForm({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity | null;
+  onChanged: () => void;
+}) {
   const save = useServerFn(saveMyCreatorProfile);
   const [form, setForm] = useState({
     displayName: "",
@@ -281,8 +287,8 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
       <div>
         <h2 className="font-display text-lg font-semibold">Connect your social account</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your <strong>public</strong> handle. This links your public profile for analysis — it is not
-          an official login, and it does not grant access to private insights.
+          Enter your <strong>public</strong> handle. This links your public profile for analysis —
+          it is not an official login, and it does not grant access to private insights.
         </p>
       </div>
       <div className="flex gap-2">
@@ -291,10 +297,16 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
             key={p}
             onClick={() => setPlatform(p)}
             className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium ${
-              platform === p ? "border-primary bg-card text-foreground" : "border-border text-muted-foreground"
+              platform === p
+                ? "border-primary bg-card text-foreground"
+                : "border-border text-muted-foreground"
             }`}
           >
-            {p === "instagram" ? <Instagram className="h-4 w-4" aria-hidden /> : <Music2 className="h-4 w-4" aria-hidden />}
+            {p === "instagram" ? (
+              <Instagram className="h-4 w-4" aria-hidden />
+            ) : (
+              <Music2 className="h-4 w-4" aria-hidden />
+            )}
             {PLATFORM_LABELS[p]}
           </button>
         ))}
@@ -323,7 +335,13 @@ function ConnectForm({ onChanged }: { onChanged: () => void }) {
   );
 }
 
-function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onChanged: () => void }) {
+function ConfirmStep({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity;
+  onChanged: () => void;
+}) {
   const save = useServerFn(saveMyCreatorProfile);
   const profile = identity.profile!;
 
@@ -351,7 +369,9 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
     <section className="surface space-y-4 p-5">
       <div>
         <h2 className="font-display text-lg font-semibold">Confirm your profile</h2>
-        <p className="text-sm text-muted-foreground">Review, then publish to unlock your creator dashboard.</p>
+        <p className="text-sm text-muted-foreground">
+          Review, then publish to unlock your creator dashboard.
+        </p>
       </div>
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         <Row label="Display name" value={profile.displayName} />
@@ -359,7 +379,9 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
         <Row label="Location" value={profile.location ?? "—"} />
         <Row
           label="Connected accounts"
-          value={identity.socialAccounts.map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`).join(", ")}
+          value={identity.socialAccounts
+            .map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`)
+            .join(", ")}
         />
       </dl>
       <button
@@ -378,29 +400,36 @@ function ConfirmStep({ identity, onChanged }: { identity: CreatorIdentity; onCha
   );
 }
 
-/** Never render an invented score: show a dash when the report has no value. */
-function scoreLabel(value: number | null): string {
-  return typeof value === "number" && Number.isFinite(value) ? `${Math.round(value)}/100` : "—";
-}
-
 /* ------------------------------- dashboard ------------------------------- */
 
-function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; onChanged: () => void }) {
+function CreatorDashboard({
+  identity,
+  onChanged,
+}: {
+  identity: CreatorIdentity;
+  onChanged: () => void;
+}) {
   const profile = identity.profile!;
-  const { metrics, benchmark } = identity;
+  const { metrics } = identity;
 
   return (
     <div className="space-y-5">
       <section className="surface flex flex-wrap items-center gap-4 p-5">
         <div className="h-16 w-16 overflow-hidden rounded-full bg-muted">
           {profile.profileImage ? (
-            <img src={profile.profileImage} alt={`${profile.displayName} profile picture`} className="h-full w-full object-cover" />
+            <img
+              src={profile.profileImage}
+              alt={`${profile.displayName} profile picture`}
+              className="h-full w-full object-cover"
+            />
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="font-display text-xl font-semibold">{profile.displayName}</h2>
-            {profile.isPublished ? <BadgeCheck className="h-4 w-4 text-primary" aria-hidden /> : null}
+            {profile.isPublished ? (
+              <BadgeCheck className="h-4 w-4 text-primary" aria-hidden />
+            ) : null}
           </div>
           {identity.socialAccounts.length ? (
             <p className="text-sm text-muted-foreground">
@@ -444,102 +473,7 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
         </details>
       </section>
 
-      <section className="surface p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="font-display text-lg font-semibold">Overview metrics</h3>
-          {identity.isPlaceholderData ? (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-              No analysis yet
-            </span>
-          ) : null}
-        </div>
-        {metrics ? (
-          <>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Followers" value={formatCompact(metrics.followers)} />
-              <Stat
-                label="Engagement"
-                value={metrics.engagementRate === null ? "Not enough data yet" : `${metrics.engagementRate.toFixed(2)}%`}
-              />
-              <Stat
-                label="Avg likes"
-                value={metrics.avgLikes === null ? "Not enough data yet" : formatCompact(Math.round(metrics.avgLikes))}
-              />
-              <Stat label="Posts" value={formatCompact(metrics.postsCount)} />
-              <Stat label="Following" value={formatCompact(metrics.following)} />
-              <Stat
-                label="Avg comments"
-                value={
-                  metrics.avgComments === null ? "Not enough data yet" : formatCompact(Math.round(metrics.avgComments))
-                }
-              />
-              {metrics.avgViews !== null && metrics.avgViews > 0 ? (
-                <Stat label="Avg views" value={formatCompact(Math.round(metrics.avgViews))} />
-              ) : null}
-            </div>
-            {metrics.overallScore !== null ? (
-              <div className="mt-5 flex flex-wrap items-center gap-6">
-                <div className="text-center">
-                  <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    CreatorIQ Score
-                  </p>
-                </div>
-                <ul className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
-                  <Row label="Brand" value={scoreLabel(metrics.brandScore)} />
-                  <Row label="Engagement" value={scoreLabel(metrics.engagementScore)} />
-                  <Row label="Accessibility" value={scoreLabel(metrics.accessibilityScore)} />
-                  <Row label="Growth" value={scoreLabel(metrics.growthScore)} />
-                </ul>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Run a sync on a connected account to pull live public metrics into your dashboard.
-          </p>
-        )}
-      </section>
-
-      <section className="surface p-5">
-        <h3 className="font-display text-lg font-semibold">Benchmark</h3>
-        {benchmark ? (
-          benchmark.percentile !== null && benchmark.standing ? (
-            <div className="mt-3 space-y-2 text-sm">
-              <p className="text-muted-foreground">{benchmark.peerGroup}</p>
-              <p className="font-display text-2xl font-semibold">
-                {benchmark.standing} · {benchmark.percentile}th percentile
-              </p>
-              <ul className="grid gap-2 sm:grid-cols-3">
-                <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
-                <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
-                <Row label="Top 10%" value={`${benchmark.top10Engagement}%`} />
-              </ul>
-            </div>
-          ) : (
-            /* Below the peer threshold: no peer statistics at all — they would
-               imply a comparison that does not exist. */
-            <div className="mt-3 space-y-1 text-sm">
-              <p className="font-display text-lg font-semibold text-muted-foreground">
-                Not enough comparable creators yet
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                We need more comparable creators before calculating your percentile. Your CreatorIQ
-                scores above are real and unaffected.
-              </p>
-            </div>
-          )
-        ) : (
-
-          <p className="mt-2 text-sm text-muted-foreground">
-            Not enough data yet — benchmarks appear once a real analysis with scores exists for a
-            connected account.
-          </p>
-        )}
-      </section>
+      <CreatorAnalytics identity={identity} />
 
       <section className="surface p-5">
         <h3 className="font-display text-lg font-semibold">Similar creators</h3>
@@ -560,7 +494,9 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
                     <span className="block text-xs text-muted-foreground">
                       {formatCompact(c.followers)} followers · {c.engagementRate.toFixed(2)}%
                     </span>
-                    <span className="mt-0.5 block text-[11px] text-muted-foreground">{c.reason}</span>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {c.reason}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -646,7 +582,15 @@ function SocialRow({
 
 /* --------------------------------- bits ---------------------------------- */
 
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <label className={`block text-sm ${className ?? ""}`}>
       <span className="mb-1 block font-medium text-muted-foreground">{label}</span>
@@ -660,15 +604,6 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold">{value}</span>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-display text-xl font-semibold">{value}</p>
     </div>
   );
 }
