@@ -309,7 +309,9 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
   const peerCount = comparablePeers(peers, metrics, category).length;
 
   return {
-    profile,
+    // The profile shown must represent the CONNECTED account, never stale
+    // seeded identity data from another persona.
+    profile: withConnectedAccountIdentity(profile, primary, creatorRow),
     socialAccounts,
     metrics,
     benchmark: benchmarkFrom(creatorRow, metrics, peerCount),
@@ -317,6 +319,7 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
     isPlaceholderData: false,
   };
 }
+
 
 export interface CreatorProfileInput {
   displayName: string;
