@@ -92,6 +92,19 @@ export interface SimilarCreator {
   reason: string;
 }
 
+/**
+ * Everything the KPI/insight engine needs, drawn only from data we already
+ * store. `posts` may legitimately be empty — that means "unavailable".
+ */
+export interface CreatorAnalyticsData {
+  posts: CreatorPost[];
+  signals: ProfileSignals;
+  peers: PeerStats | null;
+  dataQuality: DataQuality;
+  /** When the currently displayed metrics were actually measured. */
+  metricsFetchedAt: string | null;
+}
+
 export interface CreatorIdentity {
   profile: CreatorIdentityProfile | null;
   socialAccounts: SocialAccount[];
@@ -99,9 +112,12 @@ export interface CreatorIdentity {
   metrics: CreatorMetrics | null;
   benchmark: CreatorBenchmark | null;
   similar: SimilarCreator[];
+  /** Post-level and peer data backing the analytics dashboard. */
+  analytics: CreatorAnalyticsData | null;
   /** True when no real analysis has run yet and placeholders are shown. */
   isPlaceholderData: boolean;
 }
+
 
 export const ONBOARDING_STEPS = [
   { key: "profile", title: "Create your creator profile", description: "Name, category and location." },
