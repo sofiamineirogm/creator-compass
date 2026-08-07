@@ -304,12 +304,16 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
     return { profile, socialAccounts, metrics: null, benchmark: null, similar: [], isPlaceholderData: true };
   }
 
+  const category = (creatorRow["category"] as string | null) ?? null;
+  const peers = await loadPeerRows(metrics);
+  const peerCount = comparablePeers(peers, metrics, category).length;
+
   return {
     profile,
     socialAccounts,
     metrics,
-    benchmark: benchmarkFrom(creatorRow, metrics),
-    similar: await similarCreators(metrics, creatorRow),
+    benchmark: benchmarkFrom(creatorRow, metrics, peerCount),
+    similar: similarCreators(peers, metrics, category),
     isPlaceholderData: false,
   };
 }
