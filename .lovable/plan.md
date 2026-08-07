@@ -1,91 +1,117 @@
-# Apify Instagram field audit — @ato.gastro (plan only)
+# Instagram discovery actor research (plan only)
 
-One real run was made against the current actor (`apify~instagram-profile-scraper`, input `{ usernames: ["ato.gastro"] }`) through the connector gateway. Everything below comes from that single response.
+All facts below were verified live against the Apify API through the project's connector: the store listing for Instagram actors, and the actual input schema of `apify/instagram-scraper`. Nothing was scraped beyond that.
 
-## A. Raw fields found
+## 1. Verified actor options
 
-Exact top-level keys returned:
+### apify/instagram-scraper — id `shu8hvrXbJbY3Eb9W`
+Input schema (read from its live build) exposes:
+- `search` (free-text query) + `searchType` with enum **`hashtag` | `profile` | `place` | `user`**
+- `searchLimit` — integer, min 1, **max 250**
+- `resultsType` — `posts` | `details` | `comments` | `reels` | `mentions`
+- `directUrls[]`, `resultsLimit` per URL, `onlyPostsNewerThan` date filter
+- Schema note: "URLs always take priority over search queries — and they cannot be combined"; search queries may be comma-separated (multiple terms per run).
+- No follower filter of any kind in the schema.
+- Pricing (from the store record): pay-per-event, `result` $0.0027 each at FREE tier, down to $0.0005 at DIAMOND.
+- Production signals: 15.9M runs in the last 30 days, 99.4% success, rating 4.76.
 
-`inputUrl`, `id`, `username`, `url`, `fullName`, `biography`, `externalUrls[]`, `externalUrl`, `externalUrlShimmed`, `followersCount`, `followsCount`, `isBusinessAccount`, `businessCategoryName`, `private`, `verified`, `profilePicUrl`, `profilePicUrlHD`, `latestIgtvVideos[]`, `latestPosts[]`, `fbid`.
+This is the only actor found that does **profile / place / hashtag search** in one place.
 
-Each `externalUrls[]` entry has: `title`, `url`, `link_type`, `lynx_url`, `image_url`, `is_pinned`, `media_type`, `media_accent_color_hex`, `creation_source`.
+### apify/instagram-hashtag-scraper — id `reGe1ST3OBgYZSsZJ`
+Hashtag → posts (with locations, captions, other hashtags). $0.0026/result. 476k runs/30d but a lower 3.39 rating and a higher failure share. Returns posts, from which owner usernames are harvested.
 
-Answering the specific checklist:
+### apify/instagram-api-scraper — id `RB9HEZitC8hIUXAha`
+Supports "search keywords and URL lists" for posts, profiles, places, hashtags. Notably prices a separate `search-result` event at $0.006 (more than double a normal result). Rating 3.0, ~668k runs/30d — the weakest quality signal of the Apify-owned set.
 
-| Asked | Present? | Evidence |
-|---|---|---|
-| location | NO structured field | Only free text inside `biography` ("📍Av. Dom Vasco da Gama 43C, Lisboa") |
-| country | NO | No field at all |
-| city | NO structured field | Free text in bio only |
-| post location | NOT OBSERVABLE | `latestPosts` came back **empty** in this run |
-| hashtags | NO | No hashtag array; would only appear inside post captions |
-| mentions | NO | Same |
-| post type | NOT OBSERVABLE | `latestPosts` empty |
-| media type | Partially | `externalUrls[].media_type` (always `"none"` here) — link media, not post media |
-| business metadata | PARTIAL | `isBusinessAccount: true`, `businessCategoryName: "None"`, `fbid`, `link_type: "facebook_page"` |
-| related profiles | NO | Not returned |
-| contact information | NO structured field | Phone/WhatsApp only as bio text ("☎️215842337, WhatsApp 969873476") |
+### apify/instagram-profile-scraper — id `dSCLg0C3YEZ83HzYX` (our current actor)
+Enrichment only, `usernames` array. $0.0026/profile, plus an **`about-account` add-on at $0.007/profile that returns date joined and the account's country** — directly relevant to our missing geographic data. Store description also advertises `location` and `related profiles` in output.
 
-**Critical finding:** this run returned `latestPosts: []` and `latestIgtvVideos: []`. With the current mapper, that yields avg likes/comments/views of 0 and an engagement rate computed from nothing. The stored 651/27/4646 figures came from an earlier run that did include posts, so post return is **not guaranteed** with the current input.
+### apidojo/instagram-scraper — id `culc72xb7MP3EbaeX`
+Third-party, "location, audio, tag, and profile" URLs, $0.0005/post, 4.86 rating, 472k runs/30d. Cheapest per post but URL-driven, not a search API.
 
-## B. Fields worth persisting
+### scraping_solutions/instagram-scraper-followers-following-no-cookies — id `jWD4G57HhqYY0mFhd`
+Followers/following lists for a username, $0.00085/result. Not keyword discovery, but a strong **lookalike expansion** source: take a known Lisbon food account and harvest who it follows.
 
-From the confirmed response only:
+## 2. Comparison
 
-- `id` (Instagram numeric user id) — stable identity key that survives handle renames; useful for similarity and dedup.
-- `isBusinessAccount` (boolean) — direct business classification signal.
-- `fbid` — secondary stable identifier / business linkage signal.
-- `externalUrls[]` with `link_type` and full url (we currently drop `link_type` and keep only title+url) — a `maps.app.goo.gl` link is a strong geographic signal, a `linktr.ee` link is a creator/commerce signal, `facebook_page` confirms business.
-- `biography` — already stored; explicitly the only carrier of address, city and phone. Keep as the raw source for later derivation.
-- The raw dataset item itself, into the existing `creators.raw` column (already exists, currently never written). This removes the need to re-scrape whenever we want a field we did not map.
+| Actor | Discovery method | Location | Keyword | Hashtag | Profile data | Scale | Complexity | Main limitation |
+|---|---|---|---|---|---|---|---|---|
+| apify/instagram-scraper | search: profile/place/hashtag/user + URLs | Yes (place search) | Yes (profile/user) | Yes | Yes (`resultsType: details`) | 250 search results/run | Low | No follower filter; search results differ from logged-in feed |
+| apify/instagram-hashtag-scraper | hashtag → posts | Post-level only | No | Yes | No (post owners only) | High | Medium (must extract owners) | Returns posts, not creators; lower reliability rating |
+| apify/instagram-api-scraper | keyword + URL lists | Yes | Yes | Yes | Yes | High | Low | Lowest rating (3.0); search events cost ~2× |
+| apidojo/instagram-scraper | URL-driven (location/tag/profile) | Via location URL | No | Via tag URL | Partial | Very high, cheapest | Medium (need URLs first) | Not a search entry point |
+| scraping_solutions followers/following | account graph | No | No | No | Minimal (id, username, name) | High | Low | Only expands from a seed account |
+| **apify/instagram-profile-scraper (current)** | none | `about-account` add-on returns country | No | No | Full | Batched usernames | — | Enrichment only |
 
-Signal mapping to the five goals:
-1. Geographic relevance — bio text, Google Maps external link.
-2. Content classification — bio text, post captions when present.
-3. Business classification — `isBusinessAccount`, `businessCategoryName`, `fbid`, `facebook_page` link type.
-4. Creator similarity — `id`, follower counts, link types, derived category.
-5. Discovery ranking — engagement metrics already stored, plus the above as filters.
+## 3. How each feeds our existing pipeline
 
-## C. Fields not worth persisting
+Our enrichment stays exactly as-is: `{ usernames: [...] }` → `mapInstagram` → `CreatorProfile`. Each discovery option produces a username list:
 
-`inputUrl` (echo of our own input), `externalUrlShimmed` and `lynx_url` (redirect wrappers that expire), `image_url` / `media_accent_color_hex` / `creation_source` / `is_pinned` on links (cosmetic), `externalUrl` (duplicate of `externalUrls[0].url`), `profilePicUrl` low-res when the HD variant exists.
+- instagram-scraper, `searchType: place` → place results → posts at that place → post owner usernames.
+- instagram-scraper, `searchType: profile` → matching accounts directly (cleanest handle source).
+- hashtag scrapers → posts → `ownerUsername` per post → dedupe.
+- followers/following → usernames directly.
 
-## D. Proposed normalized structure
-
-Additions only — nothing existing changes:
-
+Target flow is unchanged from the brief:
 ```text
-CreatorProfile {
-  ...existing fields
-  externalId: string | null        // Instagram numeric "id"
-  isBusinessAccount: boolean
-  facebookId: string | null        // "fbid"
-  externalLinks: {
-    title, url,
-    linkType: string | null        // NEW: "external" | "facebook_page" | ...
-  }[]
-}
+discovery actor -> candidate usernames -> dedupe against creators table
+  -> existing profile scraper (batched) -> CreatorProfile
+  -> classification (bio/captions/links) -> follower + relevance filter -> ranking
 ```
 
-Persistence uses existing columns where possible: `creators.raw` for the full payload, `creators.external_links` for the enriched link objects. `externalId`, `isBusinessAccount` and `facebookId` have no column today — they could live inside `raw` first, and only get promoted to columns when discovery actually queries them. No new tables.
+## 4. The Lisbon food example
 
-Nothing derived (city, country, category) is added — those stay null until an explicit, clearly-labelled inference step is built.
+A. **Yes**, candidates are findable — but through post owners, not a direct "creators in Lisbon" query.
 
-## E. Batch enrichment changes required
+B. Mechanism: run `apify/instagram-scraper` twice —
+   - `searchType: place`, `search: "Lisboa"` → place pages → `resultsType: posts` on those places;
+   - `searchType: hashtag` on `#lisboafood`, `#comidalisboa`, `#restaurantelisboa` → posts.
+   Collect `ownerUsername` from both, union, dedupe.
 
-The actor input is `usernames: []` — an array — so **one run can process multiple profiles**; the dataset returns one item per username. Changes required:
+C. Realistically: `searchLimit` caps at 250 per run; each place/hashtag can yield tens to hundreds of posts. A few hundred raw candidates per query set is realistic; after deduping and dropping brands/venues, expect a much smaller creator pool.
 
-1. `runActor()` in `src/lib/apify.server.ts` takes `string[]` instead of `string` (its current signature is the only blocker).
-2. `fetchCreatorFromApify()` returns a map keyed by username instead of a single profile; `mapInstagram` is already per-item and needs no change.
-3. `analyze.server.ts` keeps its single-profile path; a new batch path acquires locks per username, writes cache per username, and skips handles already fresh in cache before the run.
-4. The synchronous `run-sync-get-dataset-items?timeout=110` call will not hold for large batches — batching needs the async run + poll pattern, or small chunks (≈5–10 usernames).
-5. Per-username failure handling: one bad handle currently throws for the whole call; batch mode must map errors per item.
+D. Enrichment: batched `usernames` arrays through the existing profile scraper, skipping anything already fresh in `social_profile_cache`.
 
-## F. Risks
+E. **Follower filtering happens after enrichment, in our code** — no actor exposes a follower filter. This is the single biggest cost driver: we pay to enrich profiles we then discard.
 
-- **Posts are not guaranteed.** This live run returned zero posts, which silently produces zero engagement metrics. This is the highest-value thing to investigate before any discovery work.
-- `businessCategoryName` returns the literal `"None"` even for an obvious restaurant — it is not a usable category source.
-- All geographic and contact data is unstructured bio text; any extraction is inference and must be labelled as such.
-- CDN avatar URLs and `lynx_url` values expire; do not treat them as stable.
-- Batching increases blast radius: one run failure affects N profiles, and sync-run timeouts scale with batch size.
-- Persisting `raw` grows the table and may contain data we should not retain indefinitely.
+F. Relevance (content / business / geography) is computed in our code from enriched data: bio text, external link types, captions, plus the `about-account` country add-on if we choose to pay for it.
+
+## 5. Cost and scale
+
+Prices below are the live FREE-tier pay-per-event rates read from the Apify store record; effective cost depends on the account's tier and Apify's 20% margin, and total spend must still be confirmed in the Apify console.
+
+Per-candidate enrichment: $0.0026 (+$0.007 if the country add-on is enabled).
+
+| Candidates | Discovery runs | Enrichment runs | Rough enrichment cost |
+|---|---|---|---|
+| 20 | 1–2 | 1 batched run | ~$0.05 |
+| 50 | 2–3 | 1–2 batched runs (chunks of ~25) | ~$0.13 |
+| 100 | 3–5 | 2–4 batched runs | ~$0.26 |
+
+Discovery cost adds $0.0027 per returned search/post result. Batching: the profile scraper accepts a `usernames` array, so N candidates need ~N/chunk runs, not N runs. Caching: every enriched profile is already cached for 24h and reusable across users; only the query→candidate list is uncached today.
+
+## 6. Cache strategy (recommendation only)
+
+Two layers:
+1. **Query cache** — key = normalised discovery query (platform + place + hashtags + follower band), value = ordered candidate username list, with its own TTL (discovery results age slower than metrics; days rather than hours). This is a new concern and does not fit `social_profile_cache`, which is keyed on `(platform, username)`.
+2. **Profile cache** — the existing `social_profile_cache`, unchanged. Every candidate is enriched at most once per TTL regardless of how many brands searched for it, which is exactly the "don't rescrape for different users" requirement.
+
+Candidate lists should store usernames only, so profile freshness is always resolved through layer 2.
+
+## 7. Recommendation
+
+**A. Best option:** `apify/instagram-scraper` (`shu8hvrXbJbY3Eb9W`). It is the only verified actor with `searchType: profile | place | hashtag` in one input, it is Apify-owned, and its run stats are the strongest of the set (15.9M runs/30d, 99.4% success, 4.76 rating).
+
+**B. Second-best:** `apify/instagram-hashtag-scraper` (`reGe1ST3OBgYZSsZJ`) as a supplementary candidate source, plus the followers/following actor for lookalike expansion from a known good seed account.
+
+**C. Why:** search-type coverage, first-party maintenance, and reliability matter more than per-result price at our volumes. `instagram-api-scraper` is cheaper to reach but rates 3.0 and charges more per search result; `apidojo` is cheapest but needs URLs we would have to discover elsewhere first.
+
+**D. Current profile scraper keeps its job:** turning a known handle into a full `CreatorProfile` with metrics and scores. Not replaced.
+
+**E. Future pipeline:** discovery run → username extraction and dedupe → cache check → batched enrichment → classification → filter → rank → cached candidate list.
+
+**F. Cost risks:** paying to enrich candidates that fail the follower filter (no upstream filter exists); the $0.007 country add-on multiplying per candidate; broad hashtag searches returning mostly venues and brands rather than creators.
+
+**G. Scraping risks:** the schema itself warns that search results "may differ from what you see in your personal feed"; place and hashtag results skew toward businesses; discovered posts are not proof the owner is a creator; Instagram-side changes can break search silently; and we already observed the profile scraper returning zero posts on a live run, which would poison metrics at scale.
+
+**H. Before implementation:** decide the candidate-quality rule (what makes an account a creator, not a venue); build batched enrichment; add the query-level cache; resolve the empty-`latestPosts` problem; and confirm real spend for one small end-to-end discovery run in the Apify console before opening it to users.
