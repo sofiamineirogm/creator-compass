@@ -66,6 +66,13 @@ export function DemoSwitcher() {
           >
             {loadDemo.isPending ? "Adding…" : "Load demo campaigns"}
           </button>
+          <a
+            href="/demo"
+            className="mt-1 block w-full rounded-xl px-3 py-2 text-center text-xs font-semibold text-foreground underline underline-offset-4"
+          >
+            Open demo console
+          </a>
+
         </div>
       ) : null}
 
