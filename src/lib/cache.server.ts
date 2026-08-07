@@ -61,7 +61,7 @@ export async function writeCache(
   platform: Platform,
   username: string,
   profile: CreatorProfile,
-  report: CreatorReport,
+  report: CreatorReport | null,
 ): Promise<void> {
   const db = await admin();
   const now = new Date();
