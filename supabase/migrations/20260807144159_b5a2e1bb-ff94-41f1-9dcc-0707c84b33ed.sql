@@ -1,0 +1,9 @@
+ALTER TABLE public.creators
+  ALTER COLUMN avg_likes DROP NOT NULL,
+  ALTER COLUMN avg_comments DROP NOT NULL,
+  ALTER COLUMN avg_views DROP NOT NULL,
+  ALTER COLUMN engagement_rate DROP NOT NULL,
+  ALTER COLUMN avg_likes DROP DEFAULT,
+  ALTER COLUMN avg_comments DROP DEFAULT,
+  ALTER COLUMN avg_views DROP DEFAULT,
+  ALTER COLUMN engagement_rate DROP DEFAULT;

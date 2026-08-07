@@ -44,10 +44,11 @@ export interface CreatorMetrics {
   followers: number;
   following: number;
   postsCount: number;
-  avgLikes: number;
-  avgComments: number;
-  avgViews: number;
-  engagementRate: number;
+  /** Null means unavailable — never render as zero. */
+  avgLikes: number | null;
+  avgComments: number | null;
+  avgViews: number | null;
+  engagementRate: number | null;
   overallScore: number | null;
   brandScore: number | null;
   engagementScore: number | null;

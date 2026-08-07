@@ -105,10 +105,10 @@ async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMet
       followers: Number(c["followers"] ?? 0),
       following: Number(c["following"] ?? 0),
       postsCount: Number(c["posts_count"] ?? 0),
-      avgLikes: Number(c["avg_likes"] ?? 0),
-      avgComments: Number(c["avg_comments"] ?? 0),
-      avgViews: Number(c["avg_views"] ?? 0),
-      engagementRate: Number(c["engagement_rate"] ?? 0),
+      avgLikes: metricOrNull(c["avg_likes"]),
+      avgComments: metricOrNull(c["avg_comments"]),
+      avgViews: metricOrNull(c["avg_views"]),
+      engagementRate: metricOrNull(c["engagement_rate"]),
       overallScore: r ? Number(r["overall_score"]) : null,
       brandScore: r ? Number(r["brand_score"]) : null,
       engagementScore: r ? Number(r["engagement_score"]) : null,
@@ -117,6 +117,13 @@ async function metricsFor(account: SocialAccount): Promise<{ metrics: CreatorMet
       lastFetchedAt: c["last_fetched_at"] ?? null,
     },
   };
+}
+
+/** An absent metric stays absent: never coerced into a fabricated zero. */
+function metricOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** Obvious demo/mock/placeholder handles must never pollute analytics. */
@@ -200,7 +207,7 @@ function benchmarkFrom(
     growth: metrics.growthScore,
   };
   const hasRealScores = Object.values(scores).every((v) => typeof v === "number" && Number.isFinite(v));
-  const hasRealProfile = metrics.followers > 0 && metrics.engagementRate > 0;
+  const hasRealProfile = metrics.followers > 0 && (metrics.engagementRate ?? 0) > 0;
   if (!hasRealScores || !hasRealProfile) return null;
 
   // Reuse the existing scoring engine rather than inventing a second model.
@@ -266,7 +273,7 @@ function similarCreators(peers: PeerRow[], metrics: CreatorMetrics, category: st
       const followers = Number(r["followers"] ?? 0);
       const engagementRate = Number(r["engagement_rate"] ?? 0);
       const followerDistance = Math.abs(Math.log(followers / metrics.followers));
-      const engagementDistance = Math.abs(engagementRate - metrics.engagementRate);
+      const engagementDistance = Math.abs(engagementRate - (metrics.engagementRate ?? 0));
       const matchedCategory = Boolean(category) && r["category"] === category;
       return {
         platform: r["platform"] as Platform,

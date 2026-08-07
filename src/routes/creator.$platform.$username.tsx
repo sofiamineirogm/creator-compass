@@ -135,13 +135,17 @@ function Report({
   onRefresh: () => void;
 }) {
   const { creator, report } = result;
+  const metric = (value: number | null) => (value === null ? "—" : formatCompact(Math.round(value)));
   const stats = [
     { label: "Followers", value: formatCompact(creator.followers) },
     { label: "Following", value: formatCompact(creator.following) },
     { label: "Posts", value: formatCompact(creator.postsCount) },
-    { label: "Avg likes", value: formatCompact(creator.avgLikes) },
-    { label: "Avg comments", value: formatCompact(creator.avgComments) },
-    { label: "Engagement", value: `${creator.engagementRate.toFixed(2)}%` },
+    { label: "Avg likes", value: metric(creator.avgLikes) },
+    { label: "Avg comments", value: metric(creator.avgComments) },
+    {
+      label: "Engagement",
+      value: creator.engagementRate === null ? "—" : `${creator.engagementRate.toFixed(2)}%`,
+    },
   ];
 
   return (
@@ -194,7 +198,13 @@ function Report({
         </div>
 
         <div className="flex flex-col items-center gap-3">
-          <ScoreDial value={report.scores.overall} label="Overall" />
+          {report ? (
+            <ScoreDial value={report.scores.overall} label="Overall" />
+          ) : (
+            <div className="flex h-40 w-40 flex-col items-center justify-center rounded-full border border-dashed border-border px-6 text-center text-xs text-muted-foreground">
+              Not enough data yet
+            </div>
+          )}
           <SaveButton platform={creator.platform} username={creator.username} />
           <button
             onClick={onRefresh}
@@ -216,6 +226,12 @@ function Report({
         ))}
       </section>
 
+      {result.notice ? (
+        <p className="surface px-5 py-4 text-sm text-muted-foreground">{result.notice}</p>
+      ) : null}
+
+      {report ? (
+        <>
       <section aria-labelledby="scores-heading" className="space-y-4">
         <h2 id="scores-heading" className="px-1 text-lg font-semibold">
           Performance scores
@@ -255,7 +271,7 @@ function Report({
             ["Peer average", `${report.benchmark.averageEngagement}%`],
             ["Top 25%", `${report.benchmark.top25Engagement}%`],
             ["Top 10%", `${report.benchmark.top10Engagement}%`],
-            ["This creator", `${creator.engagementRate.toFixed(2)}%`],
+            ["This creator", creator.engagementRate === null ? "—" : `${creator.engagementRate.toFixed(2)}%`],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-muted px-4 py-4">
               <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{label}</dt>
@@ -283,6 +299,17 @@ function Report({
           </button>
         </div>
       </section>
+        </>
+      ) : (
+        <section className="surface p-8 text-center">
+          <h2 className="text-lg font-semibold">Not enough data yet</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            The provider returned no recent posts for @{creator.username}, so engagement, scores and
+            benchmarks cannot be calculated. Try refreshing later.
+          </p>
+        </section>
+      )}
+
 
       <p className="px-1 text-center text-xs text-muted-foreground">
         {result.cached ? "Loaded from cache" : "Freshly fetched"} ·{" "}

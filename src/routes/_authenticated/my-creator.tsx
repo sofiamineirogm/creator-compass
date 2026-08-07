@@ -457,12 +457,23 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
           <>
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Stat label="Followers" value={formatCompact(metrics.followers)} />
-              <Stat label="Engagement" value={`${metrics.engagementRate.toFixed(2)}%`} />
-              <Stat label="Avg likes" value={formatCompact(Math.round(metrics.avgLikes))} />
+              <Stat
+                label="Engagement"
+                value={metrics.engagementRate === null ? "Not enough data yet" : `${metrics.engagementRate.toFixed(2)}%`}
+              />
+              <Stat
+                label="Avg likes"
+                value={metrics.avgLikes === null ? "Not enough data yet" : formatCompact(Math.round(metrics.avgLikes))}
+              />
               <Stat label="Posts" value={formatCompact(metrics.postsCount)} />
               <Stat label="Following" value={formatCompact(metrics.following)} />
-              <Stat label="Avg comments" value={formatCompact(Math.round(metrics.avgComments))} />
-              {metrics.avgViews > 0 ? (
+              <Stat
+                label="Avg comments"
+                value={
+                  metrics.avgComments === null ? "Not enough data yet" : formatCompact(Math.round(metrics.avgComments))
+                }
+              />
+              {metrics.avgViews !== null && metrics.avgViews > 0 ? (
                 <Stat label="Avg views" value={formatCompact(Math.round(metrics.avgViews))} />
               ) : null}
             </div>
