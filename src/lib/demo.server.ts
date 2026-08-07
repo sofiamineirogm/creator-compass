@@ -20,7 +20,8 @@ export interface DemoAccountSpec {
   plan: Plan;
 }
 
-/** Clearly identifiable demo social handle — never a real creator account. */
+/** Public Instagram handle linked to the canonical Pro Creator demo account
+ * (demo.pro@creatoriq.test). Real public profile — analysed via the live pipeline. */
 export const DEMO_INSTAGRAM_HANDLE = "ato.gastro";
 
 /** Passwords live server-side only — they are never bundled into the client. */
