@@ -14,6 +14,13 @@ async function admin() {
   return supabaseAdmin;
 }
 
+/** Null stays null: an absent metric is "unavailable", not zero. */
+function numOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function rowToProfile(row: Row, posts: Row[]): CreatorProfile {
   return {
     platform: row["platform"] as Platform,
@@ -27,10 +34,10 @@ function rowToProfile(row: Row, posts: Row[]): CreatorProfile {
     followers: Number(row["followers"]),
     following: Number(row["following"]),
     postsCount: Number(row["posts_count"]),
-    avgLikes: Number(row["avg_likes"]),
-    avgComments: Number(row["avg_comments"]),
-    avgViews: Number(row["avg_views"]),
-    engagementRate: Number(row["engagement_rate"]),
+    avgLikes: numOrNull(row["avg_likes"]),
+    avgComments: numOrNull(row["avg_comments"]),
+    avgViews: numOrNull(row["avg_views"]),
+    engagementRate: numOrNull(row["engagement_rate"]),
     category: row["category"],
     country: row["country"],
     externalLinks: (row["external_links"] as CreatorProfile["externalLinks"]) ?? [],
@@ -47,6 +54,7 @@ function rowToProfile(row: Row, posts: Row[]): CreatorProfile {
     lastFetchedAt: row["last_fetched_at"],
   };
 }
+
 
 export async function loadCachedCreator(
   platform: Platform,
