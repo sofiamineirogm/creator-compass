@@ -307,13 +307,18 @@ function withConnectedAccountIdentity(
   const realAvatar = text(creatorRow["avatar_url"]);
   const realBio = text(creatorRow["biography"]);
 
+  // Stored profile copy is only trusted when it was authored for this handle.
+  const storedMatchesAccount =
+    text(profile.handle)?.toLowerCase() === account.handle.toLowerCase();
+  const storedName = storedMatchesAccount ? text(profile.displayName) : null;
+
   return {
     ...profile,
-    displayName: realName ?? text(profile.displayName) ?? `@${account.handle}`,
+    displayName: realName ?? storedName ?? `@${account.handle}`,
     handle: account.handle,
-    profileImage: realAvatar ?? profile.profileImage,
-    bio: realBio ?? profile.bio,
-    headline: profile.headline,
+    profileImage: realAvatar ?? (storedMatchesAccount ? profile.profileImage : null),
+    bio: realBio ?? (storedMatchesAccount ? profile.bio : null),
+    headline: storedMatchesAccount ? profile.headline : null,
     category: realCategory,
     categories: realCategory ? [realCategory] : [],
     location: realCountry,
