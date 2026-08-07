@@ -86,8 +86,8 @@ export interface Kpi {
   /** True when the value rests on a sufficient sample. */
   sufficient: boolean;
   /** Why the value is missing or weak, when applicable. */
-  caveat?: string;
-  peer?: KpiPeerComparison;
+  caveat?: string | undefined;
+  peer?: KpiPeerComparison | undefined;
 }
 
 export interface PeerStats {
