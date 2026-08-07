@@ -16,6 +16,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as AuthenticatedMarketplaceApplicationsRouteImport } from './routes/_authenticated/marketplace.applications'
 import { Route as AuthenticatedMarketplaceManageRouteImport } from './routes/_authenticated/marketplace.manage'
+import { Route as AuthenticatedMarketplaceMessagesRouteImport } from './routes/_authenticated/marketplace.messages'
+import { Route as AuthenticatedMarketplaceProfileRouteImport } from './routes/_authenticated/marketplace.profile'
 import { Route as AuthenticatedMarketplaceSavedRouteImport } from './routes/_authenticated/marketplace.saved'
 import { Route as CreatorPlatformUsernameRouteImport } from './routes/creator.$platform.$username'
 import { Route as MarketplaceCampaignsCampaignIdRouteImport } from './routes/marketplace.campaigns.$campaignId'
@@ -57,6 +59,18 @@ const AuthenticatedMarketplaceManageRoute =
     path: '/marketplace/manage',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketplaceMessagesRoute =
+  AuthenticatedMarketplaceMessagesRouteImport.update({
+    id: '/marketplace/messages',
+    path: '/marketplace/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceProfileRoute =
+  AuthenticatedMarketplaceProfileRouteImport.update({
+    id: '/marketplace/profile',
+    path: '/marketplace/profile',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketplaceSavedRoute =
   AuthenticatedMarketplaceSavedRouteImport.update({
     id: '/marketplace/saved',
@@ -88,6 +102,8 @@ export interface FileRoutesByFullPath {
   '/marketplace/': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
+  '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
+  '/marketplace/profile': typeof AuthenticatedMarketplaceProfileRoute
   '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
@@ -100,6 +116,8 @@ export interface FileRoutesByTo {
   '/marketplace': typeof MarketplaceIndexRoute
   '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
+  '/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
+  '/marketplace/profile': typeof AuthenticatedMarketplaceProfileRoute
   '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
@@ -114,6 +132,8 @@ export interface FileRoutesById {
   '/marketplace/': typeof MarketplaceIndexRoute
   '/_authenticated/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
   '/_authenticated/marketplace/manage': typeof AuthenticatedMarketplaceManageRouteWithChildren
+  '/_authenticated/marketplace/messages': typeof AuthenticatedMarketplaceMessagesRoute
+  '/_authenticated/marketplace/profile': typeof AuthenticatedMarketplaceProfileRoute
   '/_authenticated/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
   '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
@@ -128,6 +148,8 @@ export interface FileRouteTypes {
     | '/marketplace/'
     | '/marketplace/applications'
     | '/marketplace/manage'
+    | '/marketplace/messages'
+    | '/marketplace/profile'
     | '/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
@@ -140,6 +162,8 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/marketplace/applications'
     | '/marketplace/manage'
+    | '/marketplace/messages'
+    | '/marketplace/profile'
     | '/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
@@ -153,6 +177,8 @@ export interface FileRouteTypes {
     | '/marketplace/'
     | '/_authenticated/marketplace/applications'
     | '/_authenticated/marketplace/manage'
+    | '/_authenticated/marketplace/messages'
+    | '/_authenticated/marketplace/profile'
     | '/_authenticated/marketplace/saved'
     | '/creator/$platform/$username'
     | '/marketplace/campaigns/$campaignId'
@@ -219,6 +245,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplaceManageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketplace/messages': {
+      id: '/_authenticated/marketplace/messages'
+      path: '/marketplace/messages'
+      fullPath: '/marketplace/messages'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace/profile': {
+      id: '/_authenticated/marketplace/profile'
+      path: '/marketplace/profile'
+      fullPath: '/marketplace/profile'
+      preLoaderRoute: typeof AuthenticatedMarketplaceProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketplace/saved': {
       id: '/_authenticated/marketplace/saved'
       path: '/marketplace/saved'
@@ -269,6 +309,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedMarketplaceApplicationsRoute: typeof AuthenticatedMarketplaceApplicationsRoute
   AuthenticatedMarketplaceManageRoute: typeof AuthenticatedMarketplaceManageRouteWithChildren
+  AuthenticatedMarketplaceMessagesRoute: typeof AuthenticatedMarketplaceMessagesRoute
+  AuthenticatedMarketplaceProfileRoute: typeof AuthenticatedMarketplaceProfileRoute
   AuthenticatedMarketplaceSavedRoute: typeof AuthenticatedMarketplaceSavedRoute
 }
 
@@ -278,6 +320,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedMarketplaceApplicationsRoute,
   AuthenticatedMarketplaceManageRoute:
     AuthenticatedMarketplaceManageRouteWithChildren,
+  AuthenticatedMarketplaceMessagesRoute: AuthenticatedMarketplaceMessagesRoute,
+  AuthenticatedMarketplaceProfileRoute: AuthenticatedMarketplaceProfileRoute,
   AuthenticatedMarketplaceSavedRoute: AuthenticatedMarketplaceSavedRoute,
 }
 
