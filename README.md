@@ -21,9 +21,18 @@ npm i
 npm run dev
 ```
 
-## Built with
+## Architecture
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+CreatorIQ is a **TanStack Start** app (file-based routing in `src/routes`,
+server logic via `createServerFn`) bundled with **Vite**. It is *not* Next.js.
+
+- **TanStack Start + TanStack Router / Query** — routing, SSR and data loading
+- **Vite 7** — build tooling
+- **React 19 + TypeScript**
+- **Tailwind CSS v4** (`src/styles.css`) + shadcn/ui components
+- **Supabase** — Postgres, auth and RLS (`src/integrations/supabase`)
+- **Apify** — public Instagram/TikTok profile data, cached 24h in `social_profile_cache`
+
+### Environment
+
+Copy `.env.example` to `.env`. `.env` is git-ignored and must never be committed.
