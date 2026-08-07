@@ -468,7 +468,12 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
             </div>
             {metrics.overallScore !== null ? (
               <div className="mt-5 flex flex-wrap items-center gap-6">
-                <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
+                <div className="text-center">
+                  <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    CreatorIQ Score
+                  </p>
+                </div>
                 <ul className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
                   <Row label="Brand" value={scoreLabel(metrics.brandScore)} />
                   <Row label="Engagement" value={scoreLabel(metrics.engagementScore)} />
