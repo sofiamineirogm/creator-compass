@@ -459,14 +459,14 @@ export type Database = {
       creators: {
         Row: {
           avatar_url: string | null
-          avg_comments: number
-          avg_likes: number
-          avg_views: number
+          avg_comments: number | null
+          avg_likes: number | null
+          avg_views: number | null
           biography: string | null
           category: string | null
           country: string | null
           created_at: string
-          engagement_rate: number
+          engagement_rate: number | null
           external_links: Json
           followers: number
           following: number
@@ -484,14 +484,14 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          avg_comments?: number
-          avg_likes?: number
-          avg_views?: number
+          avg_comments?: number | null
+          avg_likes?: number | null
+          avg_views?: number | null
           biography?: string | null
           category?: string | null
           country?: string | null
           created_at?: string
-          engagement_rate?: number
+          engagement_rate?: number | null
           external_links?: Json
           followers?: number
           following?: number
@@ -509,14 +509,14 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          avg_comments?: number
-          avg_likes?: number
-          avg_views?: number
+          avg_comments?: number | null
+          avg_likes?: number | null
+          avg_views?: number | null
           biography?: string | null
           category?: string | null
           country?: string | null
           created_at?: string
-          engagement_rate?: number
+          engagement_rate?: number | null
           external_links?: Json
           followers?: number
           following?: number
