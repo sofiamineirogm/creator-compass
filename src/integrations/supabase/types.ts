@@ -745,6 +745,56 @@ export type Database = {
           },
         ]
       }
+      social_accounts: {
+        Row: {
+          connected_at: string
+          connection_type: Database["public"]["Enums"]["social_connection_type"]
+          created_at: string
+          creator_profile_id: string
+          handle: string
+          id: string
+          last_synced_at: string | null
+          platform: Database["public"]["Enums"]["platform"]
+          platform_user_id: string | null
+          profile_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string
+          connection_type?: Database["public"]["Enums"]["social_connection_type"]
+          created_at?: string
+          creator_profile_id: string
+          handle: string
+          id?: string
+          last_synced_at?: string | null
+          platform: Database["public"]["Enums"]["platform"]
+          platform_user_id?: string | null
+          profile_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string
+          connection_type?: Database["public"]["Enums"]["social_connection_type"]
+          created_at?: string
+          creator_profile_id?: string
+          handle?: string
+          id?: string
+          last_synced_at?: string | null
+          platform?: Database["public"]["Enums"]["platform"]
+          platform_user_id?: string | null
+          profile_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_creator_profile_id_fkey"
+            columns: ["creator_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_profile_cache: {
         Row: {
           analytics_data: Json | null
@@ -870,6 +920,10 @@ export type Database = {
         Args: { _campaign_id: string; _user_id: string }
         Returns: boolean
       }
+      owns_creator_profile: {
+        Args: { _profile_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "guest" | "creator" | "brand" | "agency" | "admin"
@@ -899,6 +953,7 @@ export type Database = {
         | "enterprise"
         | "brand"
       platform: "instagram" | "tiktok"
+      social_connection_type: "public_handle" | "oauth"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1056,6 +1111,7 @@ export const Constants = {
         "brand",
       ],
       platform: ["instagram", "tiktok"],
+      social_connection_type: ["public_handle", "oauth"],
     },
   },
 } as const
