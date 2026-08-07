@@ -24,6 +24,7 @@ import {
   syncMySocialAccount,
 } from "@/lib/creator-identity.functions";
 import {
+  MINIMUM_BENCHMARK_PEERS,
   ONBOARDING_STEPS,
   PLATFORM_LABELS,
   nextOnboardingStep,
@@ -476,9 +477,19 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
         {benchmark ? (
           <div className="mt-3 space-y-2 text-sm">
             <p className="text-muted-foreground">{benchmark.peerGroup}</p>
-            <p className="font-display text-2xl font-semibold">
-              {benchmark.standing} · {benchmark.percentile}th percentile
-            </p>
+            {benchmark.percentile !== null && benchmark.standing ? (
+              <p className="font-display text-2xl font-semibold">
+                {benchmark.standing} · {benchmark.percentile}th percentile
+              </p>
+            ) : (
+              <p className="font-display text-lg font-semibold text-muted-foreground">
+                Not enough comparable creators yet
+                <span className="mt-1 block text-xs font-normal">
+                  {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found — your own
+                  scores are real and shown above.
+                </span>
+              </p>
+            )}
             <ul className="grid gap-2 sm:grid-cols-3">
               <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
               <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
@@ -512,15 +523,14 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
                     <span className="block text-xs text-muted-foreground">
                       {formatCompact(c.followers)} followers · {c.engagementRate.toFixed(2)}%
                     </span>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">{c.reason}</span>
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">
-            We surface similar creators from analysed profiles in your category as your data grows.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Not enough similar creators yet</p>
         )}
       </section>
     </div>
