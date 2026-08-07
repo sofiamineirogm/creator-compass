@@ -95,7 +95,7 @@ function summarize(key: ScoreSection["key"], score: number, creator: CreatorProf
     case "brand":
       return `A ${band} brand footprint. ${creator.isVerified ? "Verified status" : "No verification badge"}, ${creator.externalLinks.length} outbound link${creator.externalLinks.length === 1 ? "" : "s"} and a ${creator.biography ? `${creator.biography.trim().length}-character` : "missing"} bio shape how partners read this profile.`;
     case "engagement":
-      return `Audience response is ${band} at ${creator.engagementRate.toFixed(2)}% engagement, averaging ${Math.round(creator.avgLikes).toLocaleString()} likes and ${Math.round(creator.avgComments).toLocaleString()} comments per post.`;
+      return `Audience response is ${band} at ${(creator.engagementRate ?? 0).toFixed(2)}% engagement, averaging ${Math.round(creator.avgLikes ?? 0).toLocaleString()} likes and ${Math.round(creator.avgComments ?? 0).toLocaleString()} comments per post.`;
     case "accessibility":
       return `Content is ${band} on accessibility. Descriptive captions, a ${creator.isPrivate ? "private" : "public"} account and reachable contact paths determine how easily new audiences and brands can engage.`;
     case "growth":
@@ -112,7 +112,7 @@ export function benchmarkCreator(
   const average = round(target * 0.55, 2);
   const top25 = round(target, 2);
   const top10 = round(target * 1.8, 2);
-  const rate = creator.engagementRate;
+  const rate = creator.engagementRate ?? 0;
 
   // Log-normal style positioning against the platform's engagement curve.
   const percentile = round(
@@ -166,7 +166,7 @@ function buildPremium(creator: CreatorProfile, scores: ScoreBreakdown): PremiumA
     add(
       strengths,
       "Audience actually responds",
-      `An engagement rate of ${creator.engagementRate.toFixed(2)}% puts real interaction behind the follower count, which is what brands pay for.`,
+      `An engagement rate of ${(creator.engagementRate ?? 0).toFixed(2)}% puts real interaction behind the follower count, which is what brands pay for.`,
       "high",
     );
   if (creator.isVerified)
