@@ -333,27 +333,156 @@ function withConnectedAccountIdentity(
 }
 
 
+/* ------------------------------- analytics -------------------------------- */
+
+/** Peer KPI medians. Only produced from real, analysed, comparable creators. */
+function peerStatsFrom(peers: PeerRow[]): PeerStats {
+  const engagementRates: number[] = [];
+  const likesPerFollower: number[] = [];
+  const commentsPerFollower: number[] = [];
+  const commentToLike: number[] = [];
+  const viewsPerFollower: number[] = [];
+
+  for (const p of peers) {
+    const followers = Number(p["followers"] ?? 0);
+    const er = metricOrNull(p["engagement_rate"]);
+    const likes = metricOrNull(p["avg_likes"]);
+    const comments = metricOrNull(p["avg_comments"]);
+    const views = metricOrNull(p["avg_views"]);
+    if (er !== null) engagementRates.push(er);
+    if (followers > 0 && likes !== null) likesPerFollower.push((likes / followers) * 100);
+    if (followers > 0 && comments !== null) commentsPerFollower.push((comments / followers) * 100);
+    if (likes !== null && likes > 0 && comments !== null) commentToLike.push((comments / likes) * 100);
+    if (followers > 0 && views !== null) viewsPerFollower.push((views / followers) * 100);
+  }
+
+  const medians: Record<string, number> = {};
+  const put = (key: string, values: number[]) => {
+    const m = median(values);
+    if (m !== null) medians[key] = m;
+  };
+  put("engagementRate", engagementRates);
+  put("likesPerFollower", likesPerFollower);
+  put("commentsPerFollower", commentsPerFollower);
+  put("commentToLike", commentToLike);
+  put("viewsPerFollower", viewsPerFollower);
+
+  return {
+    peerCount: peers.length,
+    medians,
+    engagementRates,
+    sufficient: peers.length >= MINIMUM_BENCHMARK_PEERS,
+  };
+}
+
+/** Analysed posts for the connected handle, straight from stored data. */
+async function loadPosts(creatorId: string): Promise<CreatorPost[]> {
+  const db = publicClient() as unknown as Db;
+  const { data } = await db
+    .from("creator_posts")
+    .select("*")
+    .eq("creator_id", creatorId)
+    .order("posted_at", { ascending: false })
+    .limit(60);
+
+  return ((data as Row[]) ?? []).map((p) => ({
+    externalId: p["external_id"],
+    caption: p["caption"] ?? null,
+    url: p["url"] ?? null,
+    thumbnailUrl: p["thumbnail_url"] ?? null,
+    likes: Number(p["likes"] ?? 0),
+    comments: Number(p["comments"] ?? 0),
+    views: Number(p["views"] ?? 0),
+    postedAt: p["posted_at"] ?? null,
+  }));
+}
+
+function signalsFrom(creatorRow: Row): ProfileSignals {
+  const links = Array.isArray(creatorRow["external_links"]) ? creatorRow["external_links"] : [];
+  const raw = (creatorRow["raw"] ?? {}) as Row;
+  return {
+    biographyLength: String(creatorRow["biography"] ?? "").trim().length,
+    externalLinks: links.length,
+    isVerified: Boolean(creatorRow["is_verified"]),
+    isBusinessAccount: Boolean(raw["isBusinessAccount"]),
+    hasCategory: Boolean(text(creatorRow["category"])),
+  };
+}
+
+/**
+ * Data quality is read from the cached analysis when available, because only
+ * the analysis pipeline knows whether the latest refresh was complete.
+ */
+async function analyticsFor(
+  account: SocialAccount,
+  metrics: CreatorMetrics,
+  creatorRow: Row,
+  peers: PeerRow[],
+): Promise<CreatorAnalyticsData> {
+  const { readCache } = await import("./cache.server");
+  const cached = await readCache(account.platform, account.handle.toLowerCase());
+
+  const cachedPosts = cached?.profile.posts ?? [];
+  const posts = cachedPosts.length > 0 ? cachedPosts : await loadPosts(creatorRow["id"]);
+
+  const hasMetrics = metrics.avgLikes !== null || metrics.engagementRate !== null;
+  const dataQuality: DataQuality =
+    cached?.profile.dataQuality ?? (hasMetrics ? "valid" : "unavailable");
+
+  return {
+    posts,
+    signals: signalsFrom(creatorRow),
+    peers: peerStatsFrom(peers),
+    dataQuality,
+    metricsFetchedAt: cached?.profile.metricsFetchedAt ?? metrics.lastFetchedAt,
+  };
+}
+
 export async function getCreatorIdentity(db: Db, userId: string): Promise<CreatorIdentity> {
   const row = await loadProfileRow(db, userId);
   if (!row) {
-    return { profile: null, socialAccounts: [], metrics: null, benchmark: null, similar: [], isPlaceholderData: true };
+    return {
+      profile: null,
+      socialAccounts: [],
+      metrics: null,
+      benchmark: null,
+      similar: [],
+      analytics: null,
+      isPlaceholderData: true,
+    };
   }
 
   const profile = mapProfile(row);
   const socialAccounts = await loadSocialAccounts(db, profile.id);
   const primary = socialAccounts[0];
   if (!primary) {
-    return { profile, socialAccounts, metrics: null, benchmark: null, similar: [], isPlaceholderData: true };
+    return {
+      profile,
+      socialAccounts,
+      metrics: null,
+      benchmark: null,
+      similar: [],
+      analytics: null,
+      isPlaceholderData: true,
+    };
   }
 
   const { metrics, creatorRow } = await metricsFor(primary);
   if (!metrics || !creatorRow) {
-    return { profile, socialAccounts, metrics: null, benchmark: null, similar: [], isPlaceholderData: true };
+    return {
+      profile,
+      socialAccounts,
+      metrics: null,
+      benchmark: null,
+      similar: [],
+      analytics: null,
+      isPlaceholderData: true,
+    };
   }
 
   const category = (creatorRow["category"] as string | null) ?? null;
   const peers = await loadPeerRows(metrics);
-  const peerCount = comparablePeers(peers, metrics, category).length;
+  const comparable = comparablePeers(peers, metrics, category);
 
   return {
     // The profile shown must represent the CONNECTED account, never stale
@@ -361,11 +490,13 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
     profile: withConnectedAccountIdentity(profile, primary, creatorRow),
     socialAccounts,
     metrics,
-    benchmark: benchmarkFrom(creatorRow, metrics, peerCount),
+    benchmark: benchmarkFrom(creatorRow, metrics, comparable.length),
     similar: similarCreators(peers, metrics, category),
+    analytics: await analyticsFor(primary, metrics, creatorRow, comparable),
     isPlaceholderData: false,
   };
 }
+
 
 
 export interface CreatorProfileInput {
