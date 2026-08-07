@@ -157,15 +157,18 @@ async function loadPeerRows(metrics: CreatorMetrics): Promise<PeerRow[]> {
     .eq("platform", metrics.platform)
     .limit(500);
 
-  return ((data as Row[]) ?? [])
-    .map((r) => ({ ...r, hasReport: Array.isArray(r["reports"]) && r["reports"].length > 0 }))
-    .filter(
-      (r) =>
-        r["username"] !== metrics.handle &&
-        !isDemoLikeUsername(r["username"]) &&
-        hasUsableMetrics(r) &&
-        r.hasReport,
-    );
+  const rows: PeerRow[] = ((data as Row[]) ?? []).map((r) => ({
+    ...r,
+    hasReport: Array.isArray(r["reports"]) && r["reports"].length > 0,
+  }));
+
+  return rows.filter(
+    (r) =>
+      r["username"] !== metrics.handle &&
+      !isDemoLikeUsername(r["username"]) &&
+      hasUsableMetrics(r) &&
+      r.hasReport,
+  );
 }
 
 /**
