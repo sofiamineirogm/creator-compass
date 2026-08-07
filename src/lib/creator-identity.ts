@@ -56,10 +56,23 @@ export interface CreatorMetrics {
   lastFetchedAt: string | null;
 }
 
+/**
+ * Minimum number of valid comparable peers required before a percentile may be
+ * shown. Below this we say so instead of extrapolating from a tiny sample.
+ */
+export const MINIMUM_BENCHMARK_PEERS = 10;
+
+/** Minimum candidates before the "similar creators" list is meaningful. */
+export const MINIMUM_SIMILAR_CREATORS = 3;
+
 export interface CreatorBenchmark {
   peerGroup: string;
-  percentile: number;
-  standing: string;
+  /** Null when fewer than MINIMUM_BENCHMARK_PEERS valid peers exist. */
+  percentile: number | null;
+  /** Null when no percentile can be computed. */
+  standing: string | null;
+  /** Count of real, analysed, comparable creators backing this benchmark. */
+  peerCount: number;
   averageEngagement: number;
   top25Engagement: number;
   top10Engagement: number;
@@ -72,6 +85,8 @@ export interface SimilarCreator {
   avatarUrl: string | null;
   followers: number;
   engagementRate: number;
+  /** Human-readable reason this creator qualified. Never a fabricated score. */
+  reason: string;
 }
 
 export interface CreatorIdentity {
