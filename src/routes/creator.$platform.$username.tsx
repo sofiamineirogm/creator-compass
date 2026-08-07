@@ -226,6 +226,12 @@ function Report({
         ))}
       </section>
 
+      {result.notice ? (
+        <p className="surface px-5 py-4 text-sm text-muted-foreground">{result.notice}</p>
+      ) : null}
+
+      {report ? (
+        <>
       <section aria-labelledby="scores-heading" className="space-y-4">
         <h2 id="scores-heading" className="px-1 text-lg font-semibold">
           Performance scores
@@ -265,7 +271,7 @@ function Report({
             ["Peer average", `${report.benchmark.averageEngagement}%`],
             ["Top 25%", `${report.benchmark.top25Engagement}%`],
             ["Top 10%", `${report.benchmark.top10Engagement}%`],
-            ["This creator", `${creator.engagementRate.toFixed(2)}%`],
+            ["This creator", creator.engagementRate === null ? "—" : `${creator.engagementRate.toFixed(2)}%`],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-muted px-4 py-4">
               <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{label}</dt>
@@ -293,6 +299,17 @@ function Report({
           </button>
         </div>
       </section>
+        </>
+      ) : (
+        <section className="surface p-8 text-center">
+          <h2 className="text-lg font-semibold">Not enough data yet</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            The provider returned no recent posts for @{creator.username}, so engagement, scores and
+            benchmarks cannot be calculated. Try refreshing later.
+          </p>
+        </section>
+      )}
+
 
       <p className="px-1 text-center text-xs text-muted-foreground">
         {result.cached ? "Loaded from cache" : "Freshly fetched"} ·{" "}
