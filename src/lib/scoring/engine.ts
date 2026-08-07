@@ -41,11 +41,14 @@ function scoreBrand(creator: CreatorProfile, cfg: ScoringConfig): number {
 
 function scoreEngagement(creator: CreatorProfile, cfg: ScoringConfig): number {
   const target = cfg.engagementTarget[creator.platform];
-  const rate = creator.engagementRate || computeEngagementRate(creator);
+  const rate = creator.engagementRate ?? computeEngagementRate(creator) ?? 0;
+  const likes = creator.avgLikes ?? 0;
+  const comments = creator.avgComments ?? 0;
   const base = 100 * clamp(rate / target, 0, 1.15);
-  const commentRatio = creator.avgLikes > 0 ? creator.avgComments / creator.avgLikes : 0;
+  const commentRatio = likes > 0 ? comments / likes : 0;
   const conversationBonus = 10 * clamp(commentRatio / 0.03, 0, 1);
   return round(clamp(base * 0.9 + conversationBonus));
+
 }
 
 function scoreAccessibility(creator: CreatorProfile, cfg: ScoringConfig): number {
