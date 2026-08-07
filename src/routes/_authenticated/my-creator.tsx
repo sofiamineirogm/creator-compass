@@ -402,10 +402,23 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
             <h2 className="font-display text-xl font-semibold">{profile.displayName}</h2>
             {profile.isPublished ? <BadgeCheck className="h-4 w-4 text-primary" aria-hidden /> : null}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {[profile.headline, profile.category, profile.location].filter(Boolean).join(" · ") || "Creator"}
+          {identity.socialAccounts.length ? (
+            <p className="text-sm text-muted-foreground">
+              {identity.socialAccounts
+                .map((a) => `${PLATFORM_LABELS[a.platform]} @${a.handle}`)
+                .join(" · ")}
+            </p>
+          ) : null}
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            <span>Category: {profile.category ?? "Not available"}</span>
+            <span aria-hidden> · </span>
+            <span>Location: {profile.location ?? "Not available"}</span>
           </p>
+          {profile.headline ? (
+            <p className="mt-0.5 text-sm text-muted-foreground">{profile.headline}</p>
+          ) : null}
         </div>
+
         <Link
           to="/marketplace/profile"
           className="rounded-full border border-border px-4 py-2 text-sm font-semibold"
@@ -455,7 +468,12 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
             </div>
             {metrics.overallScore !== null ? (
               <div className="mt-5 flex flex-wrap items-center gap-6">
-                <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
+                <div className="text-center">
+                  <ScoreDial value={metrics.overallScore} label="Overall" size={132} />
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    CreatorIQ Score
+                  </p>
+                </div>
                 <ul className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
                   <Row label="Brand" value={scoreLabel(metrics.brandScore)} />
                   <Row label="Engagement" value={scoreLabel(metrics.engagementScore)} />
@@ -475,28 +493,36 @@ function CreatorDashboard({ identity, onChanged }: { identity: CreatorIdentity; 
       <section className="surface p-5">
         <h3 className="font-display text-lg font-semibold">Benchmark</h3>
         {benchmark ? (
-          <div className="mt-3 space-y-2 text-sm">
-            <p className="text-muted-foreground">{benchmark.peerGroup}</p>
-            {benchmark.percentile !== null && benchmark.standing ? (
+          benchmark.percentile !== null && benchmark.standing ? (
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="text-muted-foreground">{benchmark.peerGroup}</p>
               <p className="font-display text-2xl font-semibold">
                 {benchmark.standing} · {benchmark.percentile}th percentile
               </p>
-            ) : (
+              <ul className="grid gap-2 sm:grid-cols-3">
+                <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
+                <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
+                <Row label="Top 10%" value={`${benchmark.top10Engagement}%`} />
+              </ul>
+            </div>
+          ) : (
+            /* Below the peer threshold: no peer statistics at all — they would
+               imply a comparison that does not exist. */
+            <div className="mt-3 space-y-1 text-sm">
               <p className="font-display text-lg font-semibold text-muted-foreground">
                 Not enough comparable creators yet
-                <span className="mt-1 block text-xs font-normal">
-                  {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found — your own
-                  scores are real and shown above.
-                </span>
               </p>
-            )}
-            <ul className="grid gap-2 sm:grid-cols-3">
-              <Row label="Peer average" value={`${benchmark.averageEngagement}%`} />
-              <Row label="Top 25%" value={`${benchmark.top25Engagement}%`} />
-              <Row label="Top 10%" value={`${benchmark.top10Engagement}%`} />
-            </ul>
-          </div>
+              <p className="text-xs text-muted-foreground">
+                {benchmark.peerCount} of {MINIMUM_BENCHMARK_PEERS} analysed peers found.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                We need more comparable creators before calculating your percentile. Your CreatorIQ
+                scores above are real and unaffected.
+              </p>
+            </div>
+          )
         ) : (
+
           <p className="mt-2 text-sm text-muted-foreground">
             Not enough data yet — benchmarks appear once a real analysis with scores exists for a
             connected account.

@@ -286,6 +286,46 @@ function similarCreators(peers: PeerRow[], metrics: CreatorMetrics, category: st
     .map(({ score: _score, ...rest }) => rest);
 }
 
+function text(value: unknown): string | null {
+  const v = typeof value === "string" ? value.trim() : "";
+  return v && v.toLowerCase() !== "none" ? v : null;
+}
+
+/**
+ * The creator profile header must describe the connected social account.
+ * Real analysis data wins; stored profile data is only a fallback; nothing is
+ * invented — missing category/location stay null so the UI can say so.
+ */
+function withConnectedAccountIdentity(
+  profile: CreatorIdentityProfile,
+  account: SocialAccount,
+  creatorRow: Row,
+): CreatorIdentityProfile {
+  const realName = text(creatorRow["full_name"]);
+  const realCategory = text(creatorRow["category"]);
+  const realCountry = text(creatorRow["country"]);
+  const realAvatar = text(creatorRow["avatar_url"]);
+  const realBio = text(creatorRow["biography"]);
+
+  // Stored profile copy is only trusted when it was authored for this handle.
+  const storedMatchesAccount =
+    text(profile.handle)?.toLowerCase() === account.handle.toLowerCase();
+  const storedName = storedMatchesAccount ? text(profile.displayName) : null;
+
+  return {
+    ...profile,
+    displayName: realName ?? storedName ?? `@${account.handle}`,
+    handle: account.handle,
+    profileImage: realAvatar ?? (storedMatchesAccount ? profile.profileImage : null),
+    bio: realBio ?? (storedMatchesAccount ? profile.bio : null),
+    headline: storedMatchesAccount ? profile.headline : null,
+    category: realCategory,
+    categories: realCategory ? [realCategory] : [],
+    location: realCountry,
+  };
+}
+
+
 export async function getCreatorIdentity(db: Db, userId: string): Promise<CreatorIdentity> {
   const row = await loadProfileRow(db, userId);
   if (!row) {
@@ -309,7 +349,9 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
   const peerCount = comparablePeers(peers, metrics, category).length;
 
   return {
-    profile,
+    // The profile shown must represent the CONNECTED account, never stale
+    // seeded identity data from another persona.
+    profile: withConnectedAccountIdentity(profile, primary, creatorRow),
     socialAccounts,
     metrics,
     benchmark: benchmarkFrom(creatorRow, metrics, peerCount),
@@ -317,6 +359,7 @@ export async function getCreatorIdentity(db: Db, userId: string): Promise<Creato
     isPlaceholderData: false,
   };
 }
+
 
 export interface CreatorProfileInput {
   displayName: string;
