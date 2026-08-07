@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as CreatorPlatformUsernameRouteImport } from './routes/creator.$platform.$username'
 
 const IndexRoute = IndexRouteImport.update({
@@ -34,6 +35,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
+  id: '/marketplace/',
+  path: '/marketplace/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreatorPlatformUsernameRoute = CreatorPlatformUsernameRouteImport.update({
   id: '/creator/$platform/$username',
   path: '/creator/$platform/$username',
@@ -44,12 +50,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/marketplace': typeof MarketplaceIndexRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,31 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/creator/$platform/$username'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/marketplace/'
+    | '/creator/$platform/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/creator/$platform/$username'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/marketplace'
+    | '/creator/$platform/$username'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/marketplace/'
     | '/creator/$platform/$username'
   fileRoutesById: FileRoutesById
 }
@@ -78,6 +98,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MarketplaceIndexRoute: typeof MarketplaceIndexRoute
   CreatorPlatformUsernameRoute: typeof CreatorPlatformUsernameRoute
 }
 
@@ -111,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/marketplace/': {
+      id: '/marketplace/'
+      path: '/marketplace'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof MarketplaceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/creator/$platform/$username': {
       id: '/creator/$platform/$username'
       path: '/creator/$platform/$username'
@@ -136,6 +164,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  MarketplaceIndexRoute: MarketplaceIndexRoute,
   CreatorPlatformUsernameRoute: CreatorPlatformUsernameRoute,
 }
 export const routeTree = rootRouteImport
