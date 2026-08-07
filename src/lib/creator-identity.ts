@@ -5,7 +5,9 @@
  *   User account  ->  Creator profile  ->  Social accounts  ->  Analysis data
  * Social metrics are never attached to the user record.
  */
-import type { Platform } from "./creator-types";
+import type { CreatorPost, DataQuality, Platform } from "./creator-types";
+import type { PeerStats, ProfileSignals } from "./analytics/kpi";
+
 
 export type SocialConnectionType = "public_handle" | "oauth";
 
