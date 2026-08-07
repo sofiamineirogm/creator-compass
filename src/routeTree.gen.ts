@@ -14,7 +14,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
+import { Route as AuthenticatedMarketplaceApplicationsRouteImport } from './routes/_authenticated/marketplace.applications'
+import { Route as AuthenticatedMarketplaceSavedRouteImport } from './routes/_authenticated/marketplace.saved'
 import { Route as CreatorPlatformUsernameRouteImport } from './routes/creator.$platform.$username'
+import { Route as MarketplaceCampaignsCampaignIdRouteImport } from './routes/marketplace.campaigns.$campaignId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,25 +43,49 @@ const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
   path: '/marketplace/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMarketplaceApplicationsRoute =
+  AuthenticatedMarketplaceApplicationsRouteImport.update({
+    id: '/marketplace/applications',
+    path: '/marketplace/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceSavedRoute =
+  AuthenticatedMarketplaceSavedRouteImport.update({
+    id: '/marketplace/saved',
+    path: '/marketplace/saved',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const CreatorPlatformUsernameRoute = CreatorPlatformUsernameRouteImport.update({
   id: '/creator/$platform/$username',
   path: '/creator/$platform/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketplaceCampaignsCampaignIdRoute =
+  MarketplaceCampaignsCampaignIdRouteImport.update({
+    id: '/marketplace/campaigns/$campaignId',
+    path: '/marketplace/campaigns/$campaignId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
+  '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace': typeof MarketplaceIndexRoute
+  '/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
+  '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,7 +94,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/_authenticated/marketplace/applications': typeof AuthenticatedMarketplaceApplicationsRoute
+  '/_authenticated/marketplace/saved': typeof AuthenticatedMarketplaceSavedRoute
   '/creator/$platform/$username': typeof CreatorPlatformUsernameRoute
+  '/marketplace/campaigns/$campaignId': typeof MarketplaceCampaignsCampaignIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -76,14 +106,20 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/marketplace/'
+    | '/marketplace/applications'
+    | '/marketplace/saved'
     | '/creator/$platform/$username'
+    | '/marketplace/campaigns/$campaignId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/dashboard'
     | '/marketplace'
+    | '/marketplace/applications'
+    | '/marketplace/saved'
     | '/creator/$platform/$username'
+    | '/marketplace/campaigns/$campaignId'
   id:
     | '__root__'
     | '/'
@@ -91,7 +127,10 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/marketplace/'
+    | '/_authenticated/marketplace/applications'
+    | '/_authenticated/marketplace/saved'
     | '/creator/$platform/$username'
+    | '/marketplace/campaigns/$campaignId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +139,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   MarketplaceIndexRoute: typeof MarketplaceIndexRoute
   CreatorPlatformUsernameRoute: typeof CreatorPlatformUsernameRoute
+  MarketplaceCampaignsCampaignIdRoute: typeof MarketplaceCampaignsCampaignIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -139,6 +179,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/marketplace/applications': {
+      id: '/_authenticated/marketplace/applications'
+      path: '/marketplace/applications'
+      fullPath: '/marketplace/applications'
+      preLoaderRoute: typeof AuthenticatedMarketplaceApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace/saved': {
+      id: '/_authenticated/marketplace/saved'
+      path: '/marketplace/saved'
+      fullPath: '/marketplace/saved'
+      preLoaderRoute: typeof AuthenticatedMarketplaceSavedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/creator/$platform/$username': {
       id: '/creator/$platform/$username'
       path: '/creator/$platform/$username'
@@ -146,15 +200,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorPlatformUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marketplace/campaigns/$campaignId': {
+      id: '/marketplace/campaigns/$campaignId'
+      path: '/marketplace/campaigns/$campaignId'
+      fullPath: '/marketplace/campaigns/$campaignId'
+      preLoaderRoute: typeof MarketplaceCampaignsCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedMarketplaceApplicationsRoute: typeof AuthenticatedMarketplaceApplicationsRoute
+  AuthenticatedMarketplaceSavedRoute: typeof AuthenticatedMarketplaceSavedRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedMarketplaceApplicationsRoute:
+    AuthenticatedMarketplaceApplicationsRoute,
+  AuthenticatedMarketplaceSavedRoute: AuthenticatedMarketplaceSavedRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -166,17 +232,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   MarketplaceIndexRoute: MarketplaceIndexRoute,
   CreatorPlatformUsernameRoute: CreatorPlatformUsernameRoute,
+  MarketplaceCampaignsCampaignIdRoute: MarketplaceCampaignsCampaignIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
