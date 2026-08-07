@@ -28,7 +28,7 @@ export function SiteHeader() {
           CreatorIQ
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav className="flex items-center gap-1">
           <Link
             to="/marketplace"
             className={`inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-opacity hover:opacity-80 ${tone}`}
