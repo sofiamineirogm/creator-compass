@@ -12,6 +12,8 @@ export type PlatformSelection = Platform | "both";
 export interface CreatorLink {
   title: string | null;
   url: string;
+  /** Provider-supplied link classification (e.g. "facebook_page"). */
+  linkType?: string | null;
 }
 
 export interface CreatorPost {
@@ -24,6 +26,15 @@ export interface CreatorPost {
   views: number;
   postedAt: string | null;
 }
+
+/**
+ * Quality of the metrics attached to a profile.
+ * VALID              — post metrics came from the latest successful fetch.
+ * UNAVAILABLE        — the provider returned no usable posts and we have no history.
+ * INCOMPLETE_REFRESH — the latest fetch returned no posts, so previous valid
+ *                      metrics were preserved instead of being zeroed.
+ */
+export type DataQuality = "valid" | "unavailable" | "incomplete_refresh";
 
 /** Platform-agnostic creator shape produced by the Apify service layer. */
 export interface CreatorProfile {
@@ -38,16 +49,34 @@ export interface CreatorProfile {
   followers: number;
   following: number;
   postsCount: number;
-  avgLikes: number;
-  avgComments: number;
-  avgViews: number;
-  engagementRate: number;
+  /** Null means "unavailable" — never treat as zero engagement. */
+  avgLikes: number | null;
+  avgComments: number | null;
+  avgViews: number | null;
+  engagementRate: number | null;
   category: string | null;
   country: string | null;
   externalLinks: CreatorLink[];
   posts: CreatorPost[];
   lastFetchedAt: string;
+  /** Platform numeric/opaque account id, when the provider exposes it. */
+  externalId?: string | null;
+  isBusinessAccount?: boolean;
+  facebookId?: string | null;
+  dataQuality?: DataQuality;
+  /** When metrics were preserved from an earlier fetch. */
+  metricsFetchedAt?: string | null;
 }
+
+/** True when the profile carries real post-derived engagement metrics. */
+export function hasPostMetrics(profile: CreatorProfile): boolean {
+  return (
+    typeof profile.avgLikes === "number" &&
+    typeof profile.avgComments === "number" &&
+    typeof profile.engagementRate === "number"
+  );
+}
+
 
 export interface ScoreBreakdown {
   overall: number;
@@ -96,14 +125,17 @@ export interface BenchmarkResult {
 
 export interface AnalyzeResult {
   creator: CreatorProfile;
-  report: CreatorReport;
+  /** Null when there are no usable metrics to score. */
+  report: CreatorReport | null;
   cached: boolean;
   fetchedAt: string;
   /** When the cached copy goes stale, if known. */
   expiresAt?: string | null;
   /** User-facing note about cache/rate-limit behaviour. */
   notice?: string | null;
+  dataQuality?: DataQuality;
 }
+
 
 export class CreatorLookupError extends Error {
   code:
