@@ -170,7 +170,7 @@ async function loadPeerRows(metrics: CreatorMetrics): Promise<PeerRow[]> {
   const { data } = await db
     .from("creators")
     .select(
-      "id, platform, username, full_name, avatar_url, followers, engagement_rate, posts_count, category, reports(id)",
+      "id, platform, username, full_name, avatar_url, followers, engagement_rate, avg_likes, avg_comments, avg_views, posts_count, category, reports(id)",
     )
     .eq("platform", metrics.platform)
     .limit(500);
