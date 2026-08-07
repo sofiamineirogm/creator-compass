@@ -135,13 +135,17 @@ function Report({
   onRefresh: () => void;
 }) {
   const { creator, report } = result;
+  const metric = (value: number | null) => (value === null ? "—" : formatCompact(Math.round(value)));
   const stats = [
     { label: "Followers", value: formatCompact(creator.followers) },
     { label: "Following", value: formatCompact(creator.following) },
     { label: "Posts", value: formatCompact(creator.postsCount) },
-    { label: "Avg likes", value: formatCompact(creator.avgLikes) },
-    { label: "Avg comments", value: formatCompact(creator.avgComments) },
-    { label: "Engagement", value: `${creator.engagementRate.toFixed(2)}%` },
+    { label: "Avg likes", value: metric(creator.avgLikes) },
+    { label: "Avg comments", value: metric(creator.avgComments) },
+    {
+      label: "Engagement",
+      value: creator.engagementRate === null ? "—" : `${creator.engagementRate.toFixed(2)}%`,
+    },
   ];
 
   return (
