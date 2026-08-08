@@ -1,9 +1,10 @@
 /**
- * Creator Pro analytics dashboard.
+ * Creator Pro analytics — an insight-led diagnosis, not a metrics wall.
  *
- * Narrative order: PERFORMANCE -> WHY -> BENCHMARK -> ACTION.
- * Every value passes through the KPI engine, which returns null rather than a
- * fabricated zero, so each section can honestly say "Not enough data yet".
+ * Narrative order: what is happening -> who you are -> what your content did
+ * -> why -> how that compares -> what to do next. Every number passes through
+ * the KPI engine, which returns null rather than a fabricated zero, so each
+ * block can honestly say "Not enough data yet".
  */
 import { useMemo } from "react";
 import {
@@ -12,28 +13,30 @@ import {
   BarChart3,
   CheckCircle2,
   CircleDashed,
-  Lightbulb,
+  Compass,
   ListChecks,
-  MessageCircle,
+  Sparkles,
   Target,
+  UserRound,
 } from "lucide-react";
 
 import {
   analyseContent,
-  analyticalScores,
   computeCadence,
   computeKpis,
   formatKpi,
   type AnalyticsInput,
+  type Cadence,
+  type ContentAnalysis,
   type Kpi,
 } from "@/lib/analytics/kpi";
 import {
-  INSIGHT_CATEGORY_LABELS,
-  buildActions,
-  buildInsights,
-  type Insight,
-  type InsightCategory,
-} from "@/lib/analytics/insights";
+  buildDiagnosis,
+  prioritiseActions,
+  type Confidence,
+  type Finding,
+  type FindingSection,
+} from "@/lib/analytics/diagnosis";
 import { MINIMUM_BENCHMARK_PEERS, type CreatorIdentity } from "@/lib/creator-identity";
 import { formatCompact } from "@/lib/creator-types";
 import { ScoreDial } from "@/components/score-dial";
@@ -67,15 +70,14 @@ export function CreatorAnalytics({ identity }: { identity: CreatorIdentity }) {
     const content = analyseContent(input.posts, input.followers);
     const cadence = computeCadence(input.posts);
     const kpis = computeKpis(input, content, cadence);
-    const scores = analyticalScores(input, content, kpis);
-    const insights = buildInsights(input, content, cadence, kpis, scores);
-    return { input, content, cadence, kpis, scores, insights, actions: buildActions(insights) };
+    const findings = buildDiagnosis(input, content, cadence, kpis);
+    return { input, content, cadence, kpis, findings, actions: prioritiseActions(findings) };
   }, [metrics, analytics]);
 
   if (!metrics || !analytics || !model) {
     return (
       <section className="surface p-6">
-        <h3 className="font-display text-lg font-semibold">Performance analytics</h3>
+        <h3 className="font-display text-lg font-semibold">Your diagnosis</h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Run a sync on a connected account to pull live public metrics into your dashboard.
         </p>
@@ -83,39 +85,156 @@ export function CreatorAnalytics({ identity }: { identity: CreatorIdentity }) {
     );
   }
 
-  const { content, cadence, kpis, scores, insights, actions } = model;
+  const { content, cadence, kpis, findings, actions } = model;
   const kpiBy = (key: string) => kpis.find((k) => k.key === key);
+  const inSection = (section: FindingSection) => findings.filter((f) => f.section === section);
 
   return (
     <div className="space-y-5">
-      <PerformanceOverview identity={identity} kpis={kpis} />
-
-      <ScorecardSection
-        overall={metrics.overallScore}
-        scores={scores}
-        creatorIq={{
-          brand: metrics.brandScore,
-          engagement: metrics.engagementScore,
-          accessibility: metrics.accessibilityScore,
-          growth: metrics.growthScore,
-        }}
+      <PerformanceOverview
+        identity={identity}
+        kpis={kpis}
+        content={content}
+        findings={findings}
       />
 
-      <KpiSection kpis={kpis} sampleLabel={content.sample.label} />
+      <DiagnosisBlock
+        icon={<UserRound className="h-4 w-4 text-muted-foreground" aria-hidden />}
+        title="Profile & brand"
+        intro="How your account reads to a brand before they open a single post."
+        findings={inSection("profile")}
+        empty="Your profile has not been analysed yet."
+      />
 
-      <ContentSection content={content} cadence={cadence} />
+      <ContentSection
+        content={content}
+        cadence={cadence}
+        findings={inSection("content")}
+        sampleLabel={content.sample.label}
+      />
+
+      <DiagnosisBlock
+        icon={<Compass className="h-4 w-4 text-muted-foreground" aria-hidden />}
+        title="What drives your performance"
+        intro="Differences measured between your own posts — never platform averages."
+        findings={inSection("drivers")}
+        empty="No format, timing or caption difference is yet supported by enough posts to report."
+      />
 
       <BenchmarkSection
         benchmark={benchmark}
         peers={analytics.peers}
         kpis={kpis}
         engagement={kpiBy("engagementRate")?.value ?? null}
+        findings={inSection("peers")}
       />
 
-      <InsightsSection insights={insights} />
+      <EvidenceSection kpis={kpis} sampleLabel={content.sample.label} />
 
       <ActionsSection actions={actions} />
     </div>
+  );
+}
+
+/* ----------------------------- shared primitives -------------------------- */
+
+function ConfidencePill({ level }: { level: Confidence }) {
+  const copy: Record<Confidence, string> = {
+    high: "High confidence",
+    medium: "Medium confidence",
+    low: "Directional only",
+  };
+  return (
+    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {copy[level]}
+    </span>
+  );
+}
+
+function FindingCard({ finding }: { finding: Finding }) {
+  const accent =
+    finding.tone === "strength"
+      ? "border-primary/40"
+      : finding.tone === "risk"
+        ? "border-border"
+        : "border-border/60";
+
+  return (
+    <li className={`rounded-2xl border ${accent} bg-card p-4`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-start gap-2">
+          {finding.tone === "strength" ? (
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+          ) : finding.tone === "risk" ? (
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          ) : (
+            <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          )}
+          <p className="font-display text-base font-semibold leading-snug">{finding.headline}</p>
+        </div>
+        <ConfidencePill level={finding.confidence} />
+      </div>
+
+      <p className="mt-2 text-sm text-muted-foreground">{finding.observation}</p>
+
+      <dl className="mt-3 space-y-2 border-t border-border pt-3 text-xs">
+        <div>
+          <dt className="font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Evidence
+          </dt>
+          <dd className="mt-0.5 text-muted-foreground">{finding.evidence}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Why it matters
+          </dt>
+          <dd className="mt-0.5 text-muted-foreground">{finding.soWhat}</dd>
+        </div>
+        <div>
+          <dt className="font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Do this
+          </dt>
+          <dd className="mt-0.5 font-medium text-foreground">{finding.action}</dd>
+        </div>
+      </dl>
+
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        Based on: {finding.basedOn.join(" · ")}
+      </p>
+    </li>
+  );
+}
+
+function DiagnosisBlock({
+  icon,
+  title,
+  intro,
+  findings,
+  empty,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  intro: string;
+  findings: Finding[];
+  empty: string;
+}) {
+  return (
+    <section className="surface p-5 sm:p-6">
+      <div className="flex items-center gap-2">
+        {icon}
+        <h3 className="font-display text-lg font-semibold">{title}</h3>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{intro}</p>
+      {findings.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {findings.map((f) => (
+            <FindingCard key={f.id} finding={f} />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -147,17 +266,24 @@ function DataQualityBadge({ identity }: { identity: CreatorIdentity }) {
   );
 }
 
-function PerformanceOverview({ identity, kpis }: { identity: CreatorIdentity; kpis: Kpi[] }) {
+function PerformanceOverview({
+  identity,
+  kpis,
+  content,
+  findings,
+}: {
+  identity: CreatorIdentity;
+  kpis: Kpi[];
+  content: ContentAnalysis;
+  findings: Finding[];
+}) {
   const metrics = identity.metrics!;
-  const analytics = identity.analytics!;
   const cadence = kpis.find((k) => k.key === "cadence");
+  const lead = findings.find((f) => f.section === "performance") ?? findings[0] ?? null;
+  const strengths = findings.filter((f) => f.tone === "strength").slice(0, 2);
+  const risks = findings.filter((f) => f.tone === "risk").slice(0, 2);
 
   const tiles = [
-    {
-      label: "CreatorIQ Score",
-      value:
-        metrics.overallScore === null ? UNAVAILABLE : `${Math.round(metrics.overallScore)}/100`,
-    },
     {
       label: "Engagement rate",
       value:
@@ -165,21 +291,8 @@ function PerformanceOverview({ identity, kpis }: { identity: CreatorIdentity; kp
     },
     { label: "Followers", value: formatCompact(metrics.followers) },
     {
-      label: "Avg likes",
-      value: metrics.avgLikes === null ? UNAVAILABLE : formatCompact(Math.round(metrics.avgLikes)),
-    },
-    {
-      label: "Avg comments",
-      value:
-        metrics.avgComments === null ? UNAVAILABLE : formatCompact(Math.round(metrics.avgComments)),
-    },
-    {
-      label: "Avg views",
-      value: metrics.avgViews === null ? UNAVAILABLE : formatCompact(Math.round(metrics.avgViews)),
-    },
-    {
-      label: "Posts analysed",
-      value: analytics.posts.length > 0 ? String(analytics.posts.length) : UNAVAILABLE,
+      label: "Median post",
+      value: formatKpi(content.medianInteractions, "count"),
     },
     { label: "Posting cadence", value: formatKpi(cadence?.value ?? null, "perWeek") },
   ];
@@ -188,15 +301,54 @@ function PerformanceOverview({ identity, kpis }: { identity: CreatorIdentity; kp
     <section className="surface p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-semibold">Performance overview</h3>
-          <p className="text-sm text-muted-foreground">How you are performing right now.</p>
+          <h3 className="font-display text-lg font-semibold">Your diagnosis</h3>
+          <p className="text-sm text-muted-foreground">{content.sample.label}</p>
         </div>
         <DataQualityBadge identity={identity} />
       </div>
 
+      <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex shrink-0 flex-col items-center">
+          {metrics.overallScore === null ? (
+            <p className="text-sm text-muted-foreground">{UNAVAILABLE}</p>
+          ) : (
+            <ScoreDial value={metrics.overallScore} label="Overall" size={120} />
+          )}
+          <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            CreatorIQ Score
+          </p>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          {lead ? (
+            <>
+              <p className="font-display text-xl font-semibold leading-snug">{lead.headline}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{lead.observation}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {UNAVAILABLE} — sync a connected account to generate your diagnosis.
+            </p>
+          )}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <SummaryList
+              title="Working for you"
+              items={strengths.map((f) => f.headline)}
+              empty="No measured strength stands out yet."
+            />
+            <SummaryList
+              title="Holding you back"
+              items={risks.map((f) => f.headline)}
+              empty="No measured weakness stands out yet."
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-border sm:grid-cols-4">
         {tiles.map((tile) => (
-          <div key={tile.label} className="bg-card px-4 py-4">
+          <div key={tile.label} className="bg-card px-4 py-3">
             <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
               {tile.label}
             </p>
@@ -204,7 +356,7 @@ function PerformanceOverview({ identity, kpis }: { identity: CreatorIdentity; kp
               className={
                 tile.value === UNAVAILABLE
                   ? "mt-1 text-xs text-muted-foreground"
-                  : "mt-1 font-display text-xl font-semibold tabular-nums"
+                  : "mt-1 font-display text-lg font-semibold tabular-nums"
               }
             >
               {tile.value}
@@ -216,158 +368,55 @@ function PerformanceOverview({ identity, kpis }: { identity: CreatorIdentity; kp
   );
 }
 
-/* ------------------------------ B. Scorecard ------------------------------ */
-
-function ScorecardSection({
-  overall,
-  scores,
-  creatorIq,
+function SummaryList({
+  title,
+  items,
+  empty,
 }: {
-  overall: number | null;
-  scores: ReturnType<typeof analyticalScores>;
-  creatorIq: {
-    brand: number | null;
-    engagement: number | null;
-    accessibility: number | null;
-    growth: number | null;
-  };
+  title: string;
+  items: string[];
+  empty: string;
 }) {
   return (
-    <section className="surface p-5 sm:p-6">
-      <h3 className="font-display text-lg font-semibold">Scorecard</h3>
-      <div className="mt-4 flex flex-col gap-6 lg:flex-row">
-        <div className="flex flex-col items-center">
-          {overall === null ? (
-            <p className="text-sm text-muted-foreground">{UNAVAILABLE}</p>
-          ) : (
-            <ScoreDial value={overall} label="Overall" size={132} />
-          )}
-          <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            CreatorIQ Score
-          </p>
-          <ul className="mt-3 w-full space-y-1 text-xs">
-            {[
-              ["Brand", creatorIq.brand],
-              ["Engagement", creatorIq.engagement],
-              ["Accessibility", creatorIq.accessibility],
-              ["Growth", creatorIq.growth],
-            ].map(([label, value]) => (
-              <li
-                key={label as string}
-                className="flex justify-between gap-3 text-muted-foreground"
-              >
-                <span>{label as string}</span>
-                <span className="font-semibold text-foreground">
-                  {typeof value === "number" ? `${Math.round(value)}/100` : "—"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Analytical dimensions
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Measured from your own data. Separate from the CreatorIQ Score and not part of it.
-          </p>
-          <ul className="mt-3 space-y-3">
-            {scores.map((s) => (
-              <li key={s.key}>
-                <div className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">{s.label}</span>
-                  <span className="font-display font-semibold tabular-nums">
-                    {s.value === null ? (
-                      <span className="text-xs text-muted-foreground">{UNAVAILABLE}</span>
-                    ) : (
-                      `${s.value}/100`
-                    )}
-                  </span>
-                </div>
-                {s.value !== null ? (
-                  <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-muted">
-                    <span
-                      className="block h-full rounded-full bg-ember"
-                      style={{ width: `${s.value}%` }}
-                    />
-                  </span>
-                ) : null}
-                <p className="mt-1 text-[11px] text-muted-foreground">{s.basis}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </section>
+    <div className="rounded-2xl border border-border p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        {title}
+      </p>
+      {items.length === 0 ? (
+        <p className="mt-1 text-xs text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="mt-1.5 space-y-1 text-sm">
+          {items.map((item) => (
+            <li key={item} className="leading-snug">
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
-/* ------------------------------ C. KPI section ---------------------------- */
-
-function KpiSection({ kpis, sampleLabel }: { kpis: Kpi[]; sampleLabel: string }) {
-  return (
-    <section className="surface p-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-display text-lg font-semibold">Performance KPIs</h3>
-        <span className="text-xs text-muted-foreground">{sampleLabel}</span>
-      </div>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {kpis.map((kpi) => (
-          <li key={kpi.key} className="rounded-2xl border border-border p-4">
-            <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
-            <p
-              className={
-                kpi.value === null
-                  ? "mt-1 text-sm text-muted-foreground"
-                  : "mt-1 font-display text-2xl font-semibold tabular-nums"
-              }
-            >
-              {formatKpi(kpi.value, kpi.format)}
-            </p>
-            {kpi.peer ? (
-              <p
-                className={`mt-1 text-xs font-semibold ${kpi.peer.deltaPercent >= 0 ? "text-primary" : "text-muted-foreground"}`}
-              >
-                {kpi.peer.deltaPercent >= 0 ? "+" : ""}
-                {kpi.peer.deltaPercent.toFixed(1)}% vs peer median (
-                {formatKpi(kpi.peer.peerMedian, kpi.format)})
-              </p>
-            ) : null}
-            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              {kpi.explanation}
-            </p>
-            {kpi.caveat ? (
-              <p className="mt-1 text-[11px] text-muted-foreground">{kpi.caveat}</p>
-            ) : null}
-            {kpi.value !== null && !kpi.sufficient ? (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Based on a limited sample — directional only.
-              </p>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* --------------------------- D. Content performance ----------------------- */
+/* --------------------------- C. Content performance ----------------------- */
 
 function ContentSection({
   content,
   cadence,
+  findings,
+  sampleLabel,
 }: {
-  content: ReturnType<typeof analyseContent>;
-  cadence: ReturnType<typeof computeCadence>;
+  content: ContentAnalysis;
+  cadence: Cadence | null;
+  findings: Finding[];
+  sampleLabel: string;
 }) {
   return (
     <section className="surface p-5 sm:p-6">
       <div className="flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden />
-        <h3 className="font-display text-lg font-semibold">What drives your performance</h3>
+        <h3 className="font-display text-lg font-semibold">Engagement & content performance</h3>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">{content.sample.label}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{sampleLabel}</p>
 
       {content.sample.tier === "none" ? (
         <p className="mt-4 text-sm text-muted-foreground">
@@ -375,6 +424,14 @@ function ContentSection({
         </p>
       ) : (
         <div className="mt-5 space-y-6">
+          {findings.length > 0 ? (
+            <ul className="space-y-3">
+              {findings.map((f) => (
+                <FindingCard key={f.id} finding={f} />
+              ))}
+            </ul>
+          ) : null}
+
           <PostPerformanceChart content={content} />
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -385,57 +442,6 @@ function ContentSection({
               <PostCard title="Lowest-performing post" performance={content.worst} />
             ) : null}
           </div>
-
-          <ul className="grid gap-3 sm:grid-cols-3">
-            <Fact
-              label="Median post"
-              value={formatKpi(content.medianInteractions, "count")}
-              hint="interactions"
-            />
-            <Fact
-              label="Peak vs typical"
-              value={formatKpi(content.peakMultiple, "multiple")}
-              hint="best ÷ median"
-            />
-            <Fact
-              label="Top 3 share"
-              value={
-                content.topThreeShare === null
-                  ? UNAVAILABLE
-                  : `${content.topThreeShare.toFixed(1)}%`
-              }
-              hint={
-                content.expectedTopThreeShare === null
-                  ? "needs 5+ posts"
-                  : `even split would be ${content.expectedTopThreeShare.toFixed(1)}%`
-              }
-            />
-          </ul>
-
-          {content.patterns.length > 0 ? (
-            <div>
-              <h4 className="text-sm font-semibold">Measured content patterns</h4>
-              <ul className="mt-2 space-y-2">
-                {content.patterns.map((p) => (
-                  <li key={p.key} className="rounded-2xl bg-muted/40 px-4 py-3 text-sm">
-                    <span className="font-medium">{p.label}</span>{" "}
-                    <span className={p.liftPercent > 0 ? "text-primary" : "text-muted-foreground"}>
-                      {p.liftPercent > 0 ? "+" : ""}
-                      {p.liftPercent.toFixed(0)}%
-                    </span>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Median {formatKpi(p.withMedian, "count")} across {p.withCount} posts vs{" "}
-                      {formatKpi(p.withoutMedian, "count")} across {p.withoutCount} others.
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              No caption or hook pattern is yet supported by enough posts to report.
-            </p>
-          )}
 
           {cadence ? (
             <CadenceTimeline cadence={cadence} />
@@ -455,7 +461,7 @@ function PostCard({
   performance,
 }: {
   title: string;
-  performance: NonNullable<ReturnType<typeof analyseContent>["best"]>;
+  performance: NonNullable<ContentAnalysis["best"]>;
 }) {
   const { post, interactions, engagementPercent } = performance;
   return (
@@ -500,24 +506,6 @@ function PostCard({
   );
 }
 
-function Fact({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <li className="rounded-2xl border border-border p-4">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p
-        className={
-          value === UNAVAILABLE
-            ? "mt-1 text-xs text-muted-foreground"
-            : "mt-1 font-display text-xl font-semibold"
-        }
-      >
-        {value}
-      </p>
-      <p className="text-[11px] text-muted-foreground">{hint}</p>
-    </li>
-  );
-}
-
 /* ------------------------------ E. Benchmark ------------------------------ */
 
 function BenchmarkSection({
@@ -525,11 +513,13 @@ function BenchmarkSection({
   peers,
   kpis,
   engagement,
+  findings,
 }: {
   benchmark: CreatorIdentity["benchmark"];
   peers: NonNullable<CreatorIdentity["analytics"]>["peers"];
   kpis: Kpi[];
   engagement: number | null;
+  findings: Finding[];
 }) {
   const enough = Boolean(peers?.sufficient);
 
@@ -547,9 +537,16 @@ function BenchmarkSection({
           </p>
           <p className="text-xs text-muted-foreground">
             {peers?.peerCount ?? 0} of {MINIMUM_BENCHMARK_PEERS} analysed peers found. Percentiles
-            and peer medians stay hidden until the peer set is large enough. Your own KPIs above are
-            real and unaffected.
+            and peer medians stay hidden until the peer set is large enough. Your own numbers above
+            are real and unaffected.
           </p>
+          {findings.length > 0 ? (
+            <ul className="mt-4 space-y-3">
+              {findings.map((f) => (
+                <FindingCard key={f.id} finding={f} />
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : (
         <div className="mt-4 space-y-6">
@@ -570,84 +567,60 @@ function BenchmarkSection({
   );
 }
 
-/* ------------------------------- F. Insights ------------------------------ */
+/* ------------------------------- Evidence --------------------------------- */
 
-const CATEGORY_ORDER: InsightCategory[] = [
-  "performance",
-  "content",
-  "consistency",
-  "audience",
-  "profile",
-];
-
-function InsightsSection({ insights }: { insights: Insight[] }) {
-  if (insights.length === 0) {
-    return (
-      <section className="surface p-5 sm:p-6">
-        <h3 className="font-display text-lg font-semibold">Insights</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Not enough data yet — insights appear only when your own metrics support them.
-        </p>
-      </section>
-    );
-  }
-
+function EvidenceSection({ kpis, sampleLabel }: { kpis: Kpi[]; sampleLabel: string }) {
   return (
     <section className="surface p-5 sm:p-6">
-      <div className="flex items-center gap-2">
-        <Lightbulb className="h-4 w-4 text-muted-foreground" aria-hidden />
-        <h3 className="font-display text-lg font-semibold">Why you perform this way</h3>
-      </div>
-
-      <div className="mt-4 space-y-5">
-        {CATEGORY_ORDER.map((category) => {
-          const group = insights.filter((i) => i.category === category);
-          if (group.length === 0) return null;
-          return (
-            <div key={category}>
-              <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {category === "audience" ? (
-                  <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-                ) : null}
-                {INSIGHT_CATEGORY_LABELS[category]}
-              </h4>
-              <ul className="mt-2 space-y-2">
-                {group.map((insight) => (
-                  <li key={insight.id} className="rounded-2xl border border-border p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-sm font-semibold">{insight.title}</p>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                          insight.priority === "high"
-                            ? "bg-ember text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {insight.priority}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{insight.observation}</p>
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">
-                        Evidence and recommendation
-                      </summary>
-                      <p className="mt-2 text-xs text-muted-foreground">{insight.evidence}</p>
-                      <p className="mt-2 text-xs font-medium">{insight.recommendation}</p>
-                    </details>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+      <details>
+        <summary className="cursor-pointer">
+          <span className="font-display text-lg font-semibold">The numbers behind this</span>
+          <span className="ml-2 text-xs text-muted-foreground">{sampleLabel}</span>
+        </summary>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {kpis.map((kpi) => (
+            <li key={kpi.key} className="rounded-2xl border border-border p-4">
+              <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
+              <p
+                className={
+                  kpi.value === null
+                    ? "mt-1 text-sm text-muted-foreground"
+                    : "mt-1 font-display text-2xl font-semibold tabular-nums"
+                }
+              >
+                {formatKpi(kpi.value, kpi.format)}
+              </p>
+              {kpi.peer ? (
+                <p
+                  className={`mt-1 text-xs font-semibold ${kpi.peer.deltaPercent >= 0 ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  {kpi.peer.deltaPercent >= 0 ? "+" : ""}
+                  {kpi.peer.deltaPercent.toFixed(1)}% vs peer median (
+                  {formatKpi(kpi.peer.peerMedian, kpi.format)})
+                </p>
+              ) : null}
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                {kpi.explanation}
+              </p>
+              {kpi.caveat ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">{kpi.caveat}</p>
+              ) : null}
+              {kpi.value !== null && !kpi.sufficient ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Based on a limited sample — directional only.
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }
 
-/* -------------------------------- G. Actions ------------------------------ */
+/* -------------------------------- F. Actions ------------------------------ */
 
-function ActionsSection({ actions }: { actions: ReturnType<typeof buildActions> }) {
+function ActionsSection({ actions }: { actions: ReturnType<typeof prioritiseActions> }) {
   if (actions.length === 0) return null;
   return (
     <section className="surface p-5 sm:p-6">
@@ -655,6 +628,9 @@ function ActionsSection({ actions }: { actions: ReturnType<typeof buildActions> 
         <ListChecks className="h-4 w-4 text-muted-foreground" aria-hidden />
         <h3 className="font-display text-lg font-semibold">What to do next</h3>
       </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Ranked by the size of the measured gap, not by generic best practice.
+      </p>
       <ol className="mt-4 space-y-3">
         {actions.map((action) => (
           <li key={action.rank} className="flex gap-4 rounded-2xl border border-border p-4">
@@ -662,8 +638,12 @@ function ActionsSection({ actions }: { actions: ReturnType<typeof buildActions> 
               {String(action.rank).padStart(2, "0")}
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold">{action.action}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{action.reason}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold">{action.action}</p>
+                <ConfidencePill level={action.confidence} />
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Because {action.because}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{action.expected}</p>
             </div>
           </li>
         ))}
