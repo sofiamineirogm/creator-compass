@@ -234,7 +234,7 @@ export function buildDiagnosis(
       tone: "risk",
       weight: 80,
       headline: "Your profile is missing signals brands screen on",
-      observation: `Your public profile has no ${gaps.join(", no ")}.`,
+      observation: `Your public profile is missing ${gaps.join(" and ")}.`,
       evidence: `Bio length ${s.biographyLength} characters, ${s.externalLinks} external link${s.externalLinks === 1 ? "" : "s"}, category ${s.category ?? "not set"}.`,
       soWhat:
         "Brand teams shortlist from the profile screen before they open a single post, and missing fields read as an inactive account.",
