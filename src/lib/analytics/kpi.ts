@@ -122,7 +122,16 @@ export interface ProfileSignals {
   isVerified: boolean;
   isBusinessAccount: boolean;
   hasCategory: boolean;
+  /** Raw text signals, so insights can quote the creator's own profile. */
+  biography: string | null;
+  displayName: string | null;
+  username: string | null;
+  category: string | null;
+  location: string | null;
+  /** Hostnames of the external links present on the profile. */
+  linkHosts: string[];
 }
+
 
 export interface AnalyticsInput {
   followers: number;

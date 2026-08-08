@@ -421,14 +421,32 @@ async function loadPosts(creatorId: string): Promise<CreatorPost[]> {
 function signalsFrom(creatorRow: Row): ProfileSignals {
   const links = Array.isArray(creatorRow["external_links"]) ? creatorRow["external_links"] : [];
   const raw = (creatorRow["raw"] ?? {}) as Row;
+  const biography = text(creatorRow["biography"]);
+  const linkHosts = (links as { url?: string }[])
+    .map((l) => {
+      try {
+        return new URL(String(l?.url ?? "")).hostname.replace(/^www\./, "");
+      } catch {
+        return null;
+      }
+    })
+    .filter((h): h is string => Boolean(h));
+
   return {
-    biographyLength: String(creatorRow["biography"] ?? "").trim().length,
+    biographyLength: String(biography ?? "").trim().length,
     externalLinks: links.length,
     isVerified: Boolean(creatorRow["is_verified"]),
     isBusinessAccount: Boolean(raw["isBusinessAccount"]),
     hasCategory: Boolean(text(creatorRow["category"])),
+    biography: biography ?? null,
+    displayName: text(creatorRow["full_name"]) ?? null,
+    username: text(creatorRow["username"]) ?? null,
+    category: text(creatorRow["category"]) ?? null,
+    location: text(creatorRow["country"]) ?? null,
+    linkHosts,
   };
 }
+
 
 /**
  * Data quality is read from the cached analysis when available, because only
